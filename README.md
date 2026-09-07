@@ -7,6 +7,8 @@ A door intercom with video mailbox, voice announcements, ringback tones and ring
 integration plus a full-screen card. Built for a Dahua VTO on the Asterisk add-on (TECH7Fox) with sip-core in the
 browser; the configuration dialog makes it adaptable to other door stations.
 
+![The card: live view, alarm panel, mailbox and the call section with door lock, mailbox and voice announcement](assets/screenshot.png)
+
 ## Requirements
 
 | What | Why | Required |
