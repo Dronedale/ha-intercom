@@ -706,6 +706,9 @@ class IntercomManager:
         self.ansagen = ansagen
         self.freizeichen = freizeichen
         self.klingeltoene = klingeltoene
+        if not self.letztes_klingeln and nachrichten:
+            # Nach einem Neustart: juengster Mailbox-Eintrag als letztes Klingeln
+            self.letztes_klingeln = max((n.time for n in nachrichten if n.time), default=None)
         kt = self.settings.get(SETTING_KLINGELTON) or ""
         if klingeltoene and not any(k.file == kt for k in klingeltoene):
             self.settings[SETTING_KLINGELTON] = klingeltoene[0].file

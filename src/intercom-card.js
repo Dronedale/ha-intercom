@@ -546,7 +546,7 @@ export class IntercomCard extends LitElement {
         grid-template-rows: minmax(0, 1fr);
         overflow: hidden;
       }
-      .anruf {
+      .call {
         align-self: start;
         display: grid;
         grid-template-rows: auto auto;

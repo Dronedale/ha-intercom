@@ -8,6 +8,7 @@ from typing import Any
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from . import IntercomConfigEntry
@@ -97,14 +98,22 @@ class FreizeichenSensor(IntercomEntity, SensorEntity):
         return {"active": self.manager.freizeichen_current, "list": self.manager.freizeichen_attr()}
 
 
-class LetztesKlingelnSensor(IntercomEntity, SensorEntity):
-    """Zeitpunkt des letzten Klingelns."""
+class LetztesKlingelnSensor(IntercomEntity, SensorEntity, RestoreEntity):
+    """Zeitpunkt des letzten Klingelns; ueberlebt Neustarts ueber den gespeicherten Zustand."""
 
     _attr_icon = "mdi:bell-ring-outline"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, manager) -> None:
         super().__init__(manager, "last_ring")
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if self.manager.letztes_klingeln:
+            return
+        last = await self.async_get_last_state()
+        if last is not None and last.state not in (None, "unknown", "unavailable") and dt_util.parse_datetime(last.state):
+            self.manager.letztes_klingeln = last.state
 
     @property
     def native_value(self) -> datetime | None:

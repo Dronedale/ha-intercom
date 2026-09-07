@@ -1322,7 +1322,7 @@ var ye=Object.defineProperty;var $e=(r,t,e)=>t in r?ye(r,t,{enumerable:!0,config
         grid-template-rows: minmax(0, 1fr);
         overflow: hidden;
       }
-      .anruf {
+      .call {
         align-self: start;
         display: grid;
         grid-template-rows: auto auto;
