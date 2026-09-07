@@ -32,7 +32,6 @@ async def async_setup_entry(
 class NachrichtenSensor(IntercomEntity, SensorEntity):
     """Anzahl der Mailbox-Eintraege; die Liste liegt in den Attributen fuer die Karte."""
 
-    _attr_name = "Nachrichten"
     _attr_icon = "mdi:voicemail"
 
     def __init__(self, manager) -> None:
@@ -54,7 +53,6 @@ class NachrichtenSensor(IntercomEntity, SensorEntity):
 class NeueNachrichtenSensor(IntercomEntity, SensorEntity):
     """Anzahl ungesehener Eintraege."""
 
-    _attr_name = "Neue Nachrichten"
     _attr_icon = "mdi:message-badge"
 
     def __init__(self, manager) -> None:
@@ -68,7 +66,6 @@ class NeueNachrichtenSensor(IntercomEntity, SensorEntity):
 class AnsagenSensor(IntercomEntity, SensorEntity):
     """Anzahl der Ansagen; Liste und aktive Ansage in den Attributen."""
 
-    _attr_name = "Ansagen"
     _attr_icon = "mdi:account-voice"
 
     def __init__(self, manager) -> None:
@@ -86,7 +83,6 @@ class AnsagenSensor(IntercomEntity, SensorEntity):
 class FreizeichenSensor(IntercomEntity, SensorEntity):
     """Anzahl der Freizeichen-Dateien; Liste und aktives Freizeichen in den Attributen."""
 
-    _attr_name = "Freizeichen-Dateien"
     _attr_icon = "mdi:music-box-multiple"
 
     def __init__(self, manager) -> None:
@@ -104,7 +100,6 @@ class FreizeichenSensor(IntercomEntity, SensorEntity):
 class LetztesKlingelnSensor(IntercomEntity, SensorEntity):
     """Zeitpunkt des letzten Klingelns."""
 
-    _attr_name = "Letztes Klingeln"
     _attr_icon = "mdi:bell-ring-outline"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 

@@ -88,5 +88,143 @@
     "error": {
       "move_failed": "Moving failed, the base folder was not changed. Check the target folder and permissions."
     }
+  },
+  "entity": {
+    "switch": {
+      "mailbox": {
+        "name": "Mailbox"
+      },
+      "sprachansage": {
+        "name": "Voice announcement"
+      }
+    },
+    "number": {
+      "klingeldauer": {
+        "name": "Ring duration"
+      },
+      "sprechzeit": {
+        "name": "Talk time after announcement"
+      },
+      "aufbewahrung": {
+        "name": "Retention"
+      }
+    },
+    "select": {
+      "freizeichen": {
+        "name": "Ringback tone"
+      },
+      "ansage": {
+        "name": "Active announcement"
+      },
+      "klingelton": {
+        "name": "Indoor ringtone"
+      }
+    },
+    "sensor": {
+      "nachrichten": {
+        "name": "Messages"
+      },
+      "neue_nachrichten": {
+        "name": "New messages"
+      },
+      "ansagen": {
+        "name": "Announcements"
+      },
+      "freizeichen_dateien": {
+        "name": "Ringback files"
+      },
+      "letztes_klingeln": {
+        "name": "Last ring"
+      }
+    },
+    "binary_sensor": {
+      "aufnahme": {
+        "name": "Recording"
+      },
+      "im_anruf": {
+        "name": "Door station in call"
+      }
+    },
+    "event": {
+      "klingel": {
+        "name": "Doorbell"
+      }
+    }
+  },
+  "services": {
+    "nachricht_loeschen": {
+      "name": "Delete message",
+      "description": "Deletes a mailbox entry including its clip and thumbnail.",
+      "fields": {
+        "kennung": {
+          "name": "ID",
+          "description": "ID of the entry, e.g. 2026-09-06_14-32-10"
+        }
+      }
+    },
+    "nachricht_gesehen": {
+      "name": "Mark message as seen",
+      "description": "Marks a mailbox entry as seen.",
+      "fields": {
+        "kennung": {
+          "name": "ID",
+          "description": "ID of the entry, e.g. 2026-09-06_14-32-10"
+        }
+      }
+    },
+    "alle_gesehen": {
+      "name": "Mark all messages as seen",
+      "description": "Marks all mailbox entries as seen."
+    },
+    "ansage_aktivieren": {
+      "name": "Activate announcement",
+      "description": "Makes the named announcement the active one.",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "Name of the announcement"
+        }
+      }
+    },
+    "ansage_loeschen": {
+      "name": "Delete announcement",
+      "description": "Deletes an announcement file.",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "Name of the announcement"
+        }
+      }
+    },
+    "ansage_umbenennen": {
+      "name": "Rename announcement",
+      "description": "Renames an announcement.",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "Name of the announcement"
+        },
+        "neuer_name": {
+          "name": "New name",
+          "description": "New name of the announcement"
+        }
+      }
+    },
+    "aufnahme_starten": {
+      "name": "Start recording",
+      "description": "Starts a manual recording of the door station stream."
+    },
+    "aufnahme_stoppen": {
+      "name": "Stop recording",
+      "description": "Stops the running recording."
+    },
+    "index_neu": {
+      "name": "Rescan folders",
+      "description": "Reads the mailbox, announcement, ringback and ringtone folders again."
+    },
+    "asterisk_sync": {
+      "name": "Sync Asterisk",
+      "description": "Writes all settings into the Asterisk database again."
+    }
   }
 }

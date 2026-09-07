@@ -370,7 +370,7 @@ class IntercomConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "stream_failed"
         if user_input is not None and not errors:
             data = {k: v for k, v in self._data.items() if k != CONF_IGNORE_STREAM}
-            return self.async_create_entry(title="Intercom Haustür", data=data)
+            return self.async_create_entry(title="Intercom", data=data)
         if user_input is None:
             errors = {}
         return self.async_show_form(

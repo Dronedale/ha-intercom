@@ -177,7 +177,7 @@ def main() -> int:
     mailbox = next(e for e in ents if e.startswith("switch.") and e.endswith("mailbox"))
     status, _, _ = call("POST", "/api/services/switch/turn_on", {"entity_id": mailbox})
     assert status == 200
-    klingeldauer = next(e for e in ents if e.startswith("number.") and "klingeldauer" in e)
+    klingeldauer = next(e for e in ents if e.startswith("number.") and "ring_duration" in e)
     status, _, _ = call("POST", "/api/services/number/set_value", {"entity_id": klingeldauer, "value": 15})
     assert status == 200
     time.sleep(1)
@@ -192,12 +192,12 @@ def main() -> int:
         time.sleep(6)
         set_state("sensor.102_state", "In use")
         time.sleep(6)
-        aufnahme = next(e for e in states() if e.startswith("binary_sensor.") and e.endswith("aufnahme"))
+        aufnahme = next(e for e in states() if e.startswith("binary_sensor.") and e.endswith("recording"))
         print("Aufnahme laeuft:", states()[aufnahme]["state"])
         set_state("sensor.103_state", "Not in use")
         set_state("sensor.102_state", "Not in use")
         time.sleep(6)
-        nachrichten = next(e for e in states() if e.startswith("sensor.") and e.endswith("_nachrichten") and "neue" not in e)
+        nachrichten = next(e for e in states() if e.startswith("sensor.") and e.endswith("_messages") and "new" not in e)
         s = states()[nachrichten]
         print("Nachrichten:", s["state"], json.dumps(s["attributes"].get("eintraege"), ensure_ascii=False)[:400])
         eintraege = s["attributes"].get("eintraege") or []
@@ -228,11 +228,11 @@ def main() -> int:
     if status != 200:
         return 1
     time.sleep(1)
-    ansagen = next(e for e in states() if e.startswith("sensor.") and e.endswith("_ansagen"))
+    ansagen = next(e for e in states() if e.startswith("sensor.") and e.endswith("_announcements"))
     print("Ansagen:", states()[ansagen]["state"], json.dumps(states()[ansagen]["attributes"].get("liste"), ensure_ascii=False)[:300])
     status, _, _ = call("POST", "/api/services/ha_intercom/ansage_aktivieren", {"name": "Testansage"})
     time.sleep(1)
-    sel = next(e for e in states() if e.startswith("select.") and e.endswith("_ansage"))
+    sel = next(e for e in states() if e.startswith("select.") and e.endswith("_active_announcement"))
     print("Aktive Ansage:", states()[sel]["state"])
     status, data, hdrs = call("GET", f"/api/ha_intercom/media/ansage/{res['ansage']['datei']}", raw=True)
     print(f"Ansage-Abruf: HTTP {status}, {len(data)} Byte, {hdrs.get('Content-Type')}")

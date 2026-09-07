@@ -22,7 +22,6 @@ async def async_setup_entry(
 class KlingelEvent(IntercomEntity, EventEntity):
     """Automationen hoeren hierauf statt auf die Tuerstation direkt."""
 
-    _attr_name = "Klingel"
     _attr_device_class = EventDeviceClass.DOORBELL
     _attr_event_types = EVENT_TYPES
 

@@ -88,5 +88,143 @@
     "error": {
       "move_failed": "Verschieben fehlgeschlagen, der Basisordner wurde nicht geändert. Zielordner und Rechte prüfen."
     }
+  },
+  "entity": {
+    "switch": {
+      "mailbox": {
+        "name": "Mailbox"
+      },
+      "sprachansage": {
+        "name": "Sprachansage"
+      }
+    },
+    "number": {
+      "klingeldauer": {
+        "name": "Klingeldauer"
+      },
+      "sprechzeit": {
+        "name": "Sprechzeit nach der Ansage"
+      },
+      "aufbewahrung": {
+        "name": "Aufbewahrung"
+      }
+    },
+    "select": {
+      "freizeichen": {
+        "name": "Freizeichen"
+      },
+      "ansage": {
+        "name": "Aktive Ansage"
+      },
+      "klingelton": {
+        "name": "Klingelton Innenstation"
+      }
+    },
+    "sensor": {
+      "nachrichten": {
+        "name": "Nachrichten"
+      },
+      "neue_nachrichten": {
+        "name": "Neue Nachrichten"
+      },
+      "ansagen": {
+        "name": "Ansagen"
+      },
+      "freizeichen_dateien": {
+        "name": "Freizeichen-Dateien"
+      },
+      "letztes_klingeln": {
+        "name": "Letztes Klingeln"
+      }
+    },
+    "binary_sensor": {
+      "aufnahme": {
+        "name": "Aufnahme"
+      },
+      "im_anruf": {
+        "name": "Türstation im Anruf"
+      }
+    },
+    "event": {
+      "klingel": {
+        "name": "Klingel"
+      }
+    }
+  },
+  "services": {
+    "nachricht_loeschen": {
+      "name": "Nachricht löschen",
+      "description": "Löscht einen Mailbox-Eintrag samt Clip und Vorschaubild.",
+      "fields": {
+        "kennung": {
+          "name": "Kennung",
+          "description": "Kennung des Eintrags, z. B. 2026-09-06_14-32-10"
+        }
+      }
+    },
+    "nachricht_gesehen": {
+      "name": "Nachricht als gesehen markieren",
+      "description": "Markiert einen Mailbox-Eintrag als gesehen.",
+      "fields": {
+        "kennung": {
+          "name": "Kennung",
+          "description": "Kennung des Eintrags, z. B. 2026-09-06_14-32-10"
+        }
+      }
+    },
+    "alle_gesehen": {
+      "name": "Alle Nachrichten als gesehen markieren",
+      "description": "Markiert alle Mailbox-Einträge als gesehen."
+    },
+    "ansage_aktivieren": {
+      "name": "Ansage aktivieren",
+      "description": "Macht die genannte Ansage zur aktiven Ansage.",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "Name der Ansage"
+        }
+      }
+    },
+    "ansage_loeschen": {
+      "name": "Ansage löschen",
+      "description": "Löscht eine Ansage-Datei.",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "Name der Ansage"
+        }
+      }
+    },
+    "ansage_umbenennen": {
+      "name": "Ansage umbenennen",
+      "description": "Benennt eine Ansage um.",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "Name der Ansage"
+        },
+        "neuer_name": {
+          "name": "Neuer Name",
+          "description": "Neuer Name der Ansage"
+        }
+      }
+    },
+    "aufnahme_starten": {
+      "name": "Aufnahme starten",
+      "description": "Startet eine manuelle Aufnahme des Türstations-Streams."
+    },
+    "aufnahme_stoppen": {
+      "name": "Aufnahme stoppen",
+      "description": "Beendet die laufende Aufnahme."
+    },
+    "index_neu": {
+      "name": "Ordner neu einlesen",
+      "description": "Liest Mailbox-, Ansage-, Freizeichen- und Klingelton-Ordner neu ein."
+    },
+    "asterisk_sync": {
+      "name": "Asterisk abgleichen",
+      "description": "Schreibt alle Einstellungen erneut in die Asterisk-Datenbank."
+    }
   }
 }

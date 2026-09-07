@@ -26,7 +26,6 @@ async def async_setup_entry(
 class IntercomFreizeichenSelect(IntercomEntity, SelectEntity, RestoreEntity):
     """Freizeichen an der Tuer: Standardton oder eine Datei aus dem Ordner freizeichen."""
 
-    _attr_name = "Freizeichen"
     _attr_icon = "mdi:music-note"
 
     def __init__(self, manager) -> None:
@@ -57,7 +56,6 @@ class IntercomFreizeichenSelect(IntercomEntity, SelectEntity, RestoreEntity):
 class IntercomAnsageSelect(IntercomEntity, SelectEntity, RestoreEntity):
     """Aktive Ansage des Anrufbeantworters."""
 
-    _attr_name = "Ansage"
     _attr_icon = "mdi:account-voice"
 
     def __init__(self, manager) -> None:
@@ -91,7 +89,6 @@ class IntercomKlingeltonSelect(IntercomEntity, SelectEntity, RestoreEntity):
     Attribute media_content_id und media_content_type lassen sich direkt an media_player.play_media geben.
     """
 
-    _attr_name = "Klingelton Innenstation"
     _attr_icon = "mdi:bell-ring-outline"
 
     def __init__(self, manager) -> None:

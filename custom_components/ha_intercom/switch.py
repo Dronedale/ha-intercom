@@ -13,9 +13,9 @@ from . import IntercomConfigEntry
 from .const import SETTING_MAILBOX, SETTING_SPRACHANSAGE
 from .entity import IntercomEntity
 
-SWITCHES: list[tuple[str, str, str]] = [
-    (SETTING_MAILBOX, "Mailbox", "mdi:voicemail"),
-    (SETTING_SPRACHANSAGE, "Sprachansage", "mdi:account-voice"),
+SWITCHES: list[tuple[str, str]] = [
+    (SETTING_MAILBOX, "mdi:voicemail"),
+    (SETTING_SPRACHANSAGE, "mdi:account-voice"),
 ]
 
 
@@ -23,15 +23,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: IntercomConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     manager = entry.runtime_data
-    async_add_entities(IntercomSwitch(manager, key, name, icon) for key, name, icon in SWITCHES)
+    async_add_entities(IntercomSwitch(manager, key, icon) for key, icon in SWITCHES)
 
 
 class IntercomSwitch(IntercomEntity, SwitchEntity, RestoreEntity):
     """Ein Ein/Aus-Wert des Managers, Zustand wird nach Neustart wiederhergestellt."""
 
-    def __init__(self, manager, key: str, name: str, icon: str) -> None:
+    def __init__(self, manager, key: str, icon: str) -> None:
         super().__init__(manager, key)
-        self._attr_name = name
         self._attr_icon = icon
 
     async def async_added_to_hass(self) -> None:

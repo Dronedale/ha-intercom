@@ -11,10 +11,10 @@ from .const import SETTING_AUFBEWAHRUNG, SETTING_KLINGELDAUER, SETTING_SPRECHZEI
 from .entity import IntercomEntity
 
 # key, Name, min, max, Schritt, Einheit, Icon
-NUMBERS: list[tuple[str, str, int, int, int, str, str]] = [
-    (SETTING_KLINGELDAUER, "Klingeldauer", 5, 60, 1, "s", "mdi:timer-outline"),
-    (SETTING_SPRECHZEIT, "Sprechzeit nach der Ansage", 10, 60, 5, "s", "mdi:microphone-message"),
-    (SETTING_AUFBEWAHRUNG, "Aufbewahrung", 1, 365, 1, "d", "mdi:calendar-clock"),
+NUMBERS: list[tuple[str, int, int, int, str, str]] = [
+    (SETTING_KLINGELDAUER, 5, 60, 1, "s", "mdi:timer-outline"),
+    (SETTING_SPRECHZEIT, 10, 60, 5, "s", "mdi:microphone-message"),
+    (SETTING_AUFBEWAHRUNG, 1, 365, 1, "d", "mdi:calendar-clock"),
 ]
 
 
@@ -30,9 +30,8 @@ class IntercomNumber(IntercomEntity, RestoreNumber):
 
     _attr_mode = NumberMode.SLIDER
 
-    def __init__(self, manager, key: str, name: str, vmin: int, vmax: int, step: int, unit: str, icon: str) -> None:
+    def __init__(self, manager, key: str, vmin: int, vmax: int, step: int, unit: str, icon: str) -> None:
         super().__init__(manager, key)
-        self._attr_name = name
         self._attr_native_min_value = vmin
         self._attr_native_max_value = vmax
         self._attr_native_step = step

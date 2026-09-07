@@ -22,9 +22,10 @@ class IntercomEntity(Entity):
         self.manager = manager
         self._key = key
         self._attr_unique_id = f"{manager.entry.entry_id}_{key}"
+        self._attr_translation_key = key
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, manager.entry.entry_id)},
-            name="Intercom Haustür",
+            name="Intercom",
             manufacturer="ha-intercom",
             model="Türsprechanlage",
             sw_version=VERSION,

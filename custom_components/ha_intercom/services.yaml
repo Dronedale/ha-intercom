@@ -1,82 +1,73 @@
 nachricht_loeschen:
-  name: Nachricht löschen
-  description: Löscht einen Mailbox-Eintrag samt Clip und Vorschaubild.
+  name: Delete message
+  description: Deletes a mailbox entry including its clip and thumbnail.
   fields:
     kennung:
-      name: Kennung
-      description: Kennung des Eintrags, z. B. 2026-09-06_14-32-10
+      name: ID
+      description: ID of the entry, e.g. 2026-09-06_14-32-10
       required: true
-      example: "2026-09-06_14-32-10"
+      example: 2026-09-06_14-32-10
       selector:
-        text:
-
+        text: null
 nachricht_gesehen:
-  name: Nachricht als gesehen markieren
-  description: Markiert einen Mailbox-Eintrag als gesehen.
+  name: Mark message as seen
+  description: Marks a mailbox entry as seen.
   fields:
     kennung:
-      name: Kennung
-      description: Kennung des Eintrags
+      name: ID
+      description: ID of the entry, e.g. 2026-09-06_14-32-10
       required: true
       selector:
-        text:
-
+        text: null
 alle_gesehen:
-  name: Alle Nachrichten als gesehen markieren
-  description: Setzt den Zähler neuer Nachrichten auf null.
-
+  name: Mark all messages as seen
+  description: Marks all mailbox entries as seen.
 ansage_aktivieren:
-  name: Ansage aktivieren
-  description: Macht eine Ansage zur aktiven Ansage des Anrufbeantworters. "Keine" schaltet die Ansage ab.
+  name: Activate announcement
+  description: Makes the named announcement the active one.
   fields:
     name:
       name: Name
-      description: Anzeigename oder Dateiname der Ansage
+      description: Name of the announcement
       required: true
-      example: "Standard"
+      example: Standard
       selector:
-        text:
-
+        text: null
 ansage_loeschen:
-  name: Ansage löschen
-  description: Löscht eine Ansage-Datei.
+  name: Delete announcement
+  description: Deletes an announcement file.
   fields:
     name:
       name: Name
-      description: Anzeigename oder Dateiname der Ansage
+      description: Name of the announcement
       required: true
       selector:
-        text:
-
+        text: null
 ansage_umbenennen:
-  name: Ansage umbenennen
-  description: Ändert den Anzeigenamen einer Ansage.
+  name: Rename announcement
+  description: Renames an announcement.
   fields:
     name:
       name: Name
-      description: Bisheriger Anzeigename oder Dateiname
+      description: Name of the announcement
       required: true
       selector:
-        text:
+        text: null
     neuer_name:
-      name: Neuer Name
-      description: Neuer Anzeigename
+      name: New name
+      description: New name of the announcement
       required: true
       selector:
-        text:
-
+        text: null
 aufnahme_starten:
-  name: Aufnahme starten
-  description: Startet eine Clip-Aufnahme von Hand, zum Testen.
-
+  name: Start recording
+  description: Starts a manual recording of the door station stream.
 aufnahme_stoppen:
-  name: Aufnahme stoppen
-  description: Beendet eine laufende Clip-Aufnahme.
-
+  name: Stop recording
+  description: Stops the running recording.
 index_neu:
-  name: Ordner neu einlesen
-  description: Liest Mailbox, Ansagen und Freizeichen neu ein und konvertiert neue Dateien.
-
+  name: Rescan folders
+  description: Reads the mailbox, announcement, ringback and ringtone folders again.
 asterisk_sync:
-  name: Einstellungen nach Asterisk übertragen
-  description: Schreibt alle Einstellungen erneut in die Asterisk-Datenbank (astdb).
+  name: Sync Asterisk
+  description: Writes all settings into the Asterisk database again.

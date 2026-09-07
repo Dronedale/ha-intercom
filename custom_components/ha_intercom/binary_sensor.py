@@ -20,7 +20,6 @@ async def async_setup_entry(
 class AufnahmeSensor(IntercomEntity, BinarySensorEntity):
     """An, solange ffmpeg einen Clip aufzeichnet."""
 
-    _attr_name = "Aufnahme"
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_icon = "mdi:record-rec"
 
@@ -35,7 +34,6 @@ class AufnahmeSensor(IntercomEntity, BinarySensorEntity):
 class ImAnrufSensor(IntercomEntity, BinarySensorEntity):
     """An, solange die Tuerstation nicht im Ruhezustand ist (klingelt oder spricht)."""
 
-    _attr_name = "Türstation im Anruf"
     _attr_icon = "mdi:phone-in-talk"
 
     def __init__(self, manager) -> None:

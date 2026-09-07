@@ -62,29 +62,29 @@ messages, announcements and ringback files to the new folder.
   registration sensor and the device name given in Home Assistant.
 - Serves clips, images and announcements through protected endpoints (`/api/ha_intercom/media/...`).
 
-## Entities (device "Intercom Haustür")
+## Entities (device "Intercom")
 
-The device and entity names are German for now; Home Assistant derives the entity IDs from them when the entities
-are created.
+Entity names are translated (English and German, following the user's language); the entity IDs below are derived
+from the English names when the entities are created.
 
 | Entity | Purpose |
 |---|---|
-| `switch.intercom_haustur_mailbox` | Record every ring |
-| `switch.intercom_haustur_sprachansage` | Announcement and talk time after the timeout instead of the busy tone |
-| `number.intercom_haustur_klingeldauer` | Ring duration, 5 to 60 s |
-| `number.intercom_haustur_sprechzeit_nach_der_ansage` | Talk time after the announcement, 10 to 60 s |
-| `number.intercom_haustur_aufbewahrung` | Days until cleanup |
-| `select.intercom_haustur_freizeichen` | Ringback tone: default or file |
-| `select.intercom_haustur_ansage` | Announcement: none or file |
-| `select.intercom_haustur_klingelton_innenstation` | Indoor ringtone from `klingeltoene/`; attributes `media_content_id` and `media_content_type` for `media_player.play_media` |
-| `sensor.intercom_haustur_nachrichten` | Number of messages, attribute `eintraege` |
-| `sensor.intercom_haustur_neue_nachrichten` | Number of unseen messages |
-| `sensor.intercom_haustur_ansagen` | Number of announcements, attribute `liste` |
-| `sensor.intercom_haustur_freizeichen_dateien` | Number of ringback files, attribute `liste` |
-| `sensor.intercom_haustur_letztes_klingeln` | Timestamp of the last ring |
-| `binary_sensor.intercom_haustur_aufnahme` | Recording running |
-| `binary_sensor.intercom_haustur_turstation_im_anruf` | Door station not idle |
-| `event.intercom_haustur_klingel` | Events `ring`, `angenommen` (answered), `aufgezeichnet` (recorded), `nachricht` (message) |
+| `switch.intercom_mailbox` | Record every ring |
+| `switch.intercom_voice_announcement` | Announcement and talk time after the timeout instead of the busy tone |
+| `number.intercom_ring_duration` | Ring duration, 5 to 60 s |
+| `number.intercom_talk_time_after_announcement` | Talk time after the announcement, 10 to 60 s |
+| `number.intercom_retention` | Days until cleanup |
+| `select.intercom_ringback_tone` | Ringback tone: default or file |
+| `select.intercom_active_announcement` | Announcement: none or file |
+| `select.intercom_indoor_ringtone` | Indoor ringtone from `klingeltoene/`; attributes `media_content_id` and `media_content_type` for `media_player.play_media` |
+| `sensor.intercom_messages` | Number of messages, attribute `eintraege` |
+| `sensor.intercom_new_messages` | Number of unseen messages |
+| `sensor.intercom_announcements` | Number of announcements, attribute `liste` |
+| `sensor.intercom_ringback_files` | Number of ringback files, attribute `liste` |
+| `sensor.intercom_last_ring` | Timestamp of the last ring |
+| `binary_sensor.intercom_recording` | Recording running |
+| `binary_sensor.intercom_door_station_in_call` | Door station not idle |
+| `event.intercom_doorbell` | Events `ring`, `angenommen` (answered), `aufgezeichnet` (recorded), `nachricht` (message) |
 
 ## Services
 
@@ -108,7 +108,7 @@ The Asterisk add-on must see the same path; `/media` is mounted for add-ons with
 ## Indoor ringtone
 
 The integration does not ring the tablet itself; a separate automation does that on a ring. To change the tone
-without touching the automation, there is the select `select.intercom_haustur_klingelton_innenstation` (also in the
+without touching the automation, there is the select `select.intercom_indoor_ringtone` (also in the
 settings card under "Ringing"). It lists the files in `klingeltoene/` and carries the media source of the selected
 tone as attributes. In the automation:
 
@@ -117,8 +117,8 @@ action: media_player.play_media
 target:
   entity_id: media_player.wall_tablet
 data:
-  media_content_id: "{{ state_attr('select.intercom_haustur_klingelton_innenstation', 'media_content_id') }}"
-  media_content_type: "{{ state_attr('select.intercom_haustur_klingelton_innenstation', 'media_content_type') }}"
+  media_content_id: "{{ state_attr('select.intercom_indoor_ringtone', 'media_content_id') }}"
+  media_content_type: "{{ state_attr('select.intercom_indoor_ringtone', 'media_content_type') }}"
 ```
 
 If the selected file disappears, the select falls back to the first file in the folder.
