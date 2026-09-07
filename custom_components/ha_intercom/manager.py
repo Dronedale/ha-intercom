@@ -97,31 +97,31 @@ SAFE_NAME = re.compile(r"^[A-Za-z0-9_.\-]+$")
 class Nachricht:
     """Ein Mailbox-Eintrag: ein Klingeln mit Clip und Bild."""
 
-    kennung: str
-    zeit: str
-    dauer: float = 0.0
-    angenommen: bool = False
-    nachricht: bool = False
-    gesehen: bool = False
+    id: str
+    time: str
+    duration: float = 0.0
+    answered: bool = False
+    message: bool = False
+    seen: bool = False
     clip: bool = False
-    bild: bool = False
+    image: bool = False
 
 
 @dataclass
 class Ansage:
     """Eine Ansage-Datei (WAV, 8 kHz) mit Anzeigename."""
 
-    datei: str
+    file: str
     name: str
-    erstellt: str
-    dauer: float = 0.0
+    created: str
+    duration: float = 0.0
 
 
 @dataclass
 class Freizeichen:
     """Eine Freizeichen-Datei (konvertiertes WAV)."""
 
-    datei: str
+    file: str
     name: str
 
 
@@ -129,7 +129,7 @@ class Freizeichen:
 class Klingelton:
     """Ein Klingelton der Innenstation (Datei im Ordner klingeltoene, wird unveraendert abgespielt)."""
 
-    datei: str
+    file: str
     name: str
 
 
@@ -139,6 +139,17 @@ def _now_iso() -> str:
 
 def _kennung_now() -> str:
     return dt_util.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+
+_OLD_KEYS = {
+    "kennung": "id", "zeit": "time", "dauer": "duration", "angenommen": "answered", "nachricht": "message",
+    "gesehen": "seen", "bild": "image", "datei": "file", "erstellt": "created",
+}
+
+
+def _upgrade_keys(raw: dict[str, Any]) -> dict[str, Any]:
+    """Alte (deutsche) Feldnamen aus fruehen Versionen der JSON-Dateien auf die aktuellen abbilden."""
+    return {_OLD_KEYS.get(k, k): v for k, v in raw.items()}
 
 
 def safe_name(name: str) -> bool:
@@ -300,13 +311,13 @@ class IntercomManager:
     def _astdb_values(self) -> dict[str, str]:
         ansage = self.settings.get(SETTING_ANSAGE) or ""
         ansage_pfad = str(self.dir_ansage / ansage) if ansage else ""
-        freizeichen = self.settings.get(SETTING_FREIZEICHEN) or "standard"
+        freizeichen = self.settings.get(SETTING_FREIZEICHEN) or "default"
         return {
             SETTING_KLINGELDAUER: str(int(self.settings[SETTING_KLINGELDAUER])),
             SETTING_SPRECHZEIT: str(int(self.settings[SETTING_SPRECHZEIT])),
             SETTING_SPRACHANSAGE: "on" if self.settings[SETTING_SPRACHANSAGE] else "off",
             SETTING_MAILBOX: "on" if self.settings[SETTING_MAILBOX] else "off",
-            SETTING_FREIZEICHEN: "standard" if freizeichen == "standard" else "datei",
+            SETTING_FREIZEICHEN: "default" if freizeichen == "default" else "file",
             SETTING_ANSAGE: ansage_pfad,
         }
 
@@ -354,8 +365,8 @@ class IntercomManager:
         async with self._rec_lock:
             kennung = _kennung_now()
             self.letztes_klingeln = _now_iso()
-            self._fire(EVENT_KLINGELN, {"kennung": kennung})
-            self.hass.bus.async_fire(HA_EVENT_RING, {"kennung": kennung, "entry_id": self.entry.entry_id})
+            self._fire(EVENT_KLINGELN, {"id": kennung})
+            self.hass.bus.async_fire(HA_EVENT_RING, {"id": kennung, "entry_id": self.entry.entry_id})
             if self.recording:
                 _LOGGER.debug("Klingeln waehrend laufender Aufnahme %s ignoriert", self._rec_id)
                 self._notify()
@@ -491,9 +502,9 @@ class IntercomManager:
         if info is None:
             _LOGGER.warning("Aufnahme %s ohne brauchbare Datei beendet", kennung)
             return
-        payload = {"kennung": kennung, **info}
+        payload = {"id": kennung, **info}
         self._fire(EVENT_AUFGEZEICHNET, payload)
-        if info.get("nachricht"):
+        if info.get("message"):
             self._fire(EVENT_NACHRICHT, payload)
         self.hass.bus.async_fire(HA_EVENT_RECORDED, {**payload, "entry_id": self.entry.entry_id})
 
@@ -523,17 +534,17 @@ class IntercomManager:
             and dauer >= klingeldauer + 5
         )
         eintrag = Nachricht(
-            kennung=kennung,
-            zeit=started.isoformat(timespec="seconds"),
-            dauer=round(dauer, 1),
-            angenommen=answered,
-            nachricht=nachricht,
-            gesehen=False,
+            id=kennung,
+            time=started.isoformat(timespec="seconds"),
+            duration=round(dauer, 1),
+            answered=answered,
+            message=nachricht,
+            seen=False,
             clip=True,
-            bild=bild.exists(),
+            image=bild.exists(),
         )
         (self.dir_mailbox / f"{kennung}.json").write_text(json.dumps(asdict(eintrag), ensure_ascii=False))
-        return {"dauer": eintrag.dauer, "angenommen": answered, "nachricht": nachricht}
+        return {"duration": eintrag.duration, "answered": answered, "message": nachricht}
 
     def _probe_duration(self, path: Path) -> float:
         if not self._ffprobe:
@@ -578,7 +589,7 @@ class IntercomManager:
             return
         if self.recording and new.state == self.in_use_state and not self._rec_answered:
             self._rec_answered = True
-            self._fire(EVENT_ANGENOMMEN, {"kennung": self._rec_id})
+            self._fire(EVENT_ANGENOMMEN, {"id": self._rec_id})
             self._notify()
 
     # ------------------------------------------------------------------ Index Mailbox
@@ -596,34 +607,34 @@ class IntercomManager:
             if not clip.exists():
                 continue
             try:
-                raw = json.loads(meta.read_text())
+                raw = _upgrade_keys(json.loads(meta.read_text()))
             except (OSError, ValueError):
                 continue
             result.append(
                 Nachricht(
-                    kennung=kennung,
-                    zeit=str(raw.get("zeit", "")),
-                    dauer=float(raw.get("dauer", 0) or 0),
-                    angenommen=bool(raw.get("angenommen", False)),
-                    nachricht=bool(raw.get("nachricht", False)),
-                    gesehen=bool(raw.get("gesehen", False)),
+                    id=kennung,
+                    time=str(raw.get("time", "")),
+                    duration=float(raw.get("duration", 0) or 0),
+                    answered=bool(raw.get("answered", False)),
+                    message=bool(raw.get("message", False)),
+                    seen=bool(raw.get("seen", False)),
                     clip=True,
-                    bild=(self.dir_mailbox / f"{kennung}.jpg").exists(),
+                    image=(self.dir_mailbox / f"{kennung}.jpg").exists(),
                 )
             )
-        result.sort(key=lambda n: n.kennung, reverse=True)
+        result.sort(key=lambda n: n.id, reverse=True)
         return result
 
     @property
     def neue_nachrichten(self) -> int:
-        return sum(1 for n in self.nachrichten if not n.gesehen)
+        return sum(1 for n in self.nachrichten if not n.seen)
 
     def nachrichten_attr(self) -> list[dict[str, Any]]:
         out = []
         for n in self.nachrichten:
             d = asdict(n)
-            d["clip_url"] = f"/api/ha_intercom/media/{MEDIA_KIND_CLIP}/{n.kennung}"
-            d["bild_url"] = f"/api/ha_intercom/media/{MEDIA_KIND_BILD}/{n.kennung}" if n.bild else None
+            d["clip_url"] = f"/api/ha_intercom/media/{MEDIA_KIND_CLIP}/{n.id}"
+            d["image_url"] = f"/api/ha_intercom/media/{MEDIA_KIND_BILD}/{n.id}" if n.image else None
             out.append(d)
         return out
 
@@ -644,7 +655,7 @@ class IntercomManager:
         await self.async_refresh_index()
 
     async def async_alle_gesehen(self) -> None:
-        await self.hass.async_add_executor_job(self._mark_seen, [n.kennung for n in self.nachrichten], True)
+        await self.hass.async_add_executor_job(self._mark_seen, [n.id for n in self.nachrichten], True)
         await self.async_refresh_index()
 
     def _mark_seen(self, kennungen: list[str], gesehen: bool) -> None:
@@ -653,10 +664,10 @@ class IntercomManager:
             if not meta.exists():
                 continue
             try:
-                raw = json.loads(meta.read_text())
+                raw = _upgrade_keys(json.loads(meta.read_text()))
             except (OSError, ValueError):
                 continue
-            raw["gesehen"] = gesehen
+            raw["seen"] = gesehen
             meta.write_text(json.dumps(raw, ensure_ascii=False))
 
     async def async_cleanup(self) -> int:
@@ -666,13 +677,13 @@ class IntercomManager:
         geloescht = 0
         for n in list(self.nachrichten):
             try:
-                zeit = datetime.fromisoformat(n.zeit)
+                zeit = datetime.fromisoformat(n.time)
             except ValueError:
                 continue
             if zeit.tzinfo is None:
                 zeit = zeit.replace(tzinfo=grenze.tzinfo)
             if zeit < grenze:
-                await self.hass.async_add_executor_job(self._delete_entry_files, n.kennung)
+                await self.hass.async_add_executor_job(self._delete_entry_files, n.id)
                 geloescht += 1
         if geloescht:
             _LOGGER.info("Aufraeumen: %s Eintraege aelter als %s Tage geloescht", geloescht, tage)
@@ -696,17 +707,17 @@ class IntercomManager:
         self.freizeichen = freizeichen
         self.klingeltoene = klingeltoene
         kt = self.settings.get(SETTING_KLINGELTON) or ""
-        if klingeltoene and not any(k.datei == kt for k in klingeltoene):
-            self.settings[SETTING_KLINGELTON] = klingeltoene[0].datei
+        if klingeltoene and not any(k.file == kt for k in klingeltoene):
+            self.settings[SETTING_KLINGELTON] = klingeltoene[0].file
 
         changed: list[str] = []
         aktiv = self.settings.get(SETTING_ANSAGE) or ""
-        if aktiv and not any(a.datei == aktiv for a in ansagen):
+        if aktiv and not any(a.file == aktiv for a in ansagen):
             self.settings[SETTING_ANSAGE] = ""
             changed.append(SETTING_ANSAGE)
-        fz = self.settings.get(SETTING_FREIZEICHEN) or "standard"
-        if fz != "standard" and not any(f.datei == fz for f in freizeichen):
-            self.settings[SETTING_FREIZEICHEN] = "standard"
+        fz = self.settings.get(SETTING_FREIZEICHEN) or "default"
+        if fz != "default" and not any(f.file == fz for f in freizeichen):
+            self.settings[SETTING_FREIZEICHEN] = "default"
             changed.append(SETTING_FREIZEICHEN)
         self._notify()
         if sync and changed:
@@ -735,28 +746,28 @@ class IntercomManager:
         for meta_path in self.dir_ansage.glob("*.json"):
             if not meta_path.with_suffix(".wav").exists():
                 meta_path.unlink(missing_ok=True)
-        result.sort(key=lambda a: a.erstellt, reverse=True)
+        result.sort(key=lambda a: a.created, reverse=True)
         return result
 
     def _read_ansage_meta(self, wav: Path) -> Ansage:
         meta_path = wav.with_suffix(".json")
         if meta_path.exists():
             try:
-                raw = json.loads(meta_path.read_text())
+                raw = _upgrade_keys(json.loads(meta_path.read_text()))
                 return Ansage(
-                    datei=wav.stem,
+                    file=wav.stem,
                     name=str(raw.get("name") or wav.stem),
-                    erstellt=str(raw.get("erstellt") or ""),
-                    dauer=float(raw.get("dauer", 0) or 0),
+                    created=str(raw.get("created") or ""),
+                    duration=float(raw.get("duration", 0) or 0),
                 )
             except (OSError, ValueError):
                 pass
         return self._write_ansage_meta(wav, name=wav.stem)
 
-    def _write_ansage_meta(self, wav: Path, name: str, erstellt: str | None = None) -> Ansage:
-        if erstellt is None:
-            erstellt = datetime.fromtimestamp(wav.stat().st_mtime, tz=dt_util.DEFAULT_TIME_ZONE).isoformat(timespec="seconds")
-        ansage = Ansage(datei=wav.stem, name=name, erstellt=erstellt, dauer=round(self._probe_duration(wav), 1))
+    def _write_ansage_meta(self, wav: Path, name: str, created: str | None = None) -> Ansage:
+        if created is None:
+            created = datetime.fromtimestamp(wav.stat().st_mtime, tz=dt_util.DEFAULT_TIME_ZONE).isoformat(timespec="seconds")
+        ansage = Ansage(file=wav.stem, name=name, created=created, duration=round(self._probe_duration(wav), 1))
         wav.with_suffix(".json").write_text(json.dumps(asdict(ansage), ensure_ascii=False))
         return ansage
 
@@ -779,7 +790,7 @@ class IntercomManager:
             if wav.stem not in quellen:
                 wav.unlink(missing_ok=True)
         for wav in sorted(self.dir_freizeichen_konv.glob("*.wav")):
-            result.append(Freizeichen(datei=wav.stem, name=wav.stem))
+            result.append(Freizeichen(file=wav.stem, name=wav.stem))
         return result
 
     def _convert_to_wav(self, src: Path, dst: Path) -> bool:
@@ -818,7 +829,7 @@ class IntercomManager:
 
     async def _activate_freizeichen(self, datei: str) -> None:
         """Gewaehlte Freizeichen-Datei nach aktiv kopieren und die MOH-Klasse neu laden."""
-        if datei == "standard":
+        if datei == "default":
             return
         ok = await self.hass.async_add_executor_job(self._copy_freizeichen, datei)
         if not ok:
@@ -848,21 +859,21 @@ class IntercomManager:
 
     @property
     def freizeichen_current(self) -> str:
-        fz = self.settings.get(SETTING_FREIZEICHEN) or "standard"
-        if fz == "standard":
+        fz = self.settings.get(SETTING_FREIZEICHEN) or "default"
+        if fz == "default":
             return FREIZEICHEN_STANDARD
         for f in self.freizeichen:
-            if f.datei == fz:
+            if f.file == fz:
                 return f.name
         return FREIZEICHEN_STANDARD
 
     async def async_select_freizeichen(self, option: str) -> None:
         if option == FREIZEICHEN_STANDARD:
-            await self.async_set_setting(SETTING_FREIZEICHEN, "standard")
+            await self.async_set_setting(SETTING_FREIZEICHEN, "default")
             return
         for f in self.freizeichen:
             if f.name == option:
-                await self.async_set_setting(SETTING_FREIZEICHEN, f.datei)
+                await self.async_set_setting(SETTING_FREIZEICHEN, f.file)
                 return
         _LOGGER.warning("Freizeichen %s unbekannt", option)
 
@@ -873,7 +884,7 @@ class IntercomManager:
         result: list[Klingelton] = []
         for src in sorted(self.dir_klingeltoene.iterdir()):
             if src.is_file() and src.suffix.lower() in AUDIO_EXTENSIONS and not src.name.startswith("."):
-                result.append(Klingelton(datei=src.name, name=src.stem))
+                result.append(Klingelton(file=src.name, name=src.stem))
         return result
 
     @property
@@ -884,14 +895,14 @@ class IntercomManager:
     def klingelton_current(self) -> str | None:
         aktiv = self.settings.get(SETTING_KLINGELTON) or ""
         for k in self.klingeltoene:
-            if k.datei == aktiv:
+            if k.file == aktiv:
                 return k.name
         return None
 
     async def async_select_klingelton(self, option: str) -> None:
         for k in self.klingeltoene:
             if k.name == option:
-                await self.async_set_setting(SETTING_KLINGELTON, k.datei)
+                await self.async_set_setting(SETTING_KLINGELTON, k.file)
                 return
         _LOGGER.warning("Klingelton %s unbekannt", option)
 
@@ -923,8 +934,8 @@ class IntercomManager:
         return {
             "media_content_id": media_id,
             "media_content_type": typen.get(suffix, "audio/mpeg"),
-            "pfad": str(pfad) if pfad else None,
-            "liste": [k.name for k in self.klingeltoene],
+            "path": str(pfad) if pfad else None,
+            "list": [k.name for k in self.klingeltoene],
         }
 
     @property
@@ -935,7 +946,7 @@ class IntercomManager:
     def ansage_current(self) -> str:
         aktiv = self.settings.get(SETTING_ANSAGE) or ""
         for a in self.ansagen:
-            if a.datei == aktiv:
+            if a.file == aktiv:
                 return a.name
         return ANSAGE_KEINE
 
@@ -944,24 +955,24 @@ class IntercomManager:
         out = []
         for a in self.ansagen:
             d = asdict(a)
-            d["aktiv"] = a.datei == aktiv
-            d["url"] = f"/api/ha_intercom/media/{MEDIA_KIND_ANSAGE}/{a.datei}"
+            d["active"] = a.file == aktiv
+            d["url"] = f"/api/ha_intercom/media/{MEDIA_KIND_ANSAGE}/{a.file}"
             out.append(d)
         return out
 
     def freizeichen_attr(self) -> list[dict[str, Any]]:
-        aktiv = self.settings.get(SETTING_FREIZEICHEN) or "standard"
+        aktiv = self.settings.get(SETTING_FREIZEICHEN) or "default"
         out = []
         for f in self.freizeichen:
             d = asdict(f)
-            d["aktiv"] = f.datei == aktiv
-            d["url"] = f"/api/ha_intercom/media/{MEDIA_KIND_FREIZEICHEN}/{f.datei}"
+            d["active"] = f.file == aktiv
+            d["url"] = f"/api/ha_intercom/media/{MEDIA_KIND_FREIZEICHEN}/{f.file}"
             out.append(d)
         return out
 
     def _find_ansage(self, name: str) -> Ansage | None:
         for a in self.ansagen:
-            if a.name == name or a.datei == name:
+            if a.name == name or a.file == name:
                 return a
         return None
 
@@ -973,14 +984,14 @@ class IntercomManager:
         if ansage is None:
             _LOGGER.warning("Ansage %s unbekannt", name)
             return
-        await self.async_set_setting(SETTING_ANSAGE, ansage.datei)
+        await self.async_set_setting(SETTING_ANSAGE, ansage.file)
 
     async def async_ansage_loeschen(self, name: str) -> None:
         ansage = self._find_ansage(name)
         if ansage is None:
             return
-        await self.hass.async_add_executor_job(self._delete_ansage_files, ansage.datei)
-        if self.settings.get(SETTING_ANSAGE) == ansage.datei:
+        await self.hass.async_add_executor_job(self._delete_ansage_files, ansage.file)
+        if self.settings.get(SETTING_ANSAGE) == ansage.file:
             self.settings[SETTING_ANSAGE] = ""
             await self.async_sync_astdb([SETTING_ANSAGE])
         await self.async_scan_all(sync=False)
@@ -993,8 +1004,8 @@ class IntercomManager:
         ansage = self._find_ansage(name)
         if ansage is None or not neuer_name.strip():
             return
-        wav = self.dir_ansage / f"{ansage.datei}.wav"
-        await self.hass.async_add_executor_job(self._write_ansage_meta, wav, neuer_name.strip(), ansage.erstellt)
+        wav = self.dir_ansage / f"{ansage.file}.wav"
+        await self.hass.async_add_executor_job(self._write_ansage_meta, wav, neuer_name.strip(), ansage.created)
         await self.async_scan_all(sync=False)
 
     async def async_save_ansage_upload(self, data: bytes, filename: str, name: str | None) -> Ansage | None:
@@ -1014,7 +1025,7 @@ class IntercomManager:
             raw.unlink(missing_ok=True)
             if not ok:
                 return None
-            return self._write_ansage_meta(wav, name=anzeigename, erstellt=_now_iso())
+            return self._write_ansage_meta(wav, name=anzeigename, created=_now_iso())
 
         ansage = await self.hass.async_add_executor_job(_do)
         await self.async_scan_all(sync=False)

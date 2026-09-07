@@ -5,16 +5,6 @@
         "title": "Prerequisites",
         "description": "Found on this Home Assistant:\n\nAsterisk add-on: {app}\n\nAsterisk integration: {asterisk}\n\nsip-core (extensions): {sip}\n\nThe Asterisk add-on and the Asterisk integration are required. Without sip-core the card works, only the call section is unavailable. Next sets up sources, intercom and house, and finally checks ffmpeg, stream and folder."
       },
-      "quellen": {
-        "title": "Sources",
-        "description": "How does the integration detect a ring, and where do the snapshot and the recording stream come from?",
-        "data": {
-          "trigger_entity": "Ring trigger (entity)",
-          "trigger_state": "State that means ringing",
-          "camera_entity": "Camera for the snapshot",
-          "stream_url": "RTSP stream for recording (go2rtc)"
-        }
-      },
       "sip": {
         "title": "Intercom",
         "description": "Extensions of the door station and the tablet. The list comes from sip-core and the Asterisk integration; custom values are allowed. The state sensors are derived from them.",
@@ -24,7 +14,17 @@
           "addon_slug": "Asterisk add-on (for moh reload)"
         }
       },
-      "sensoren": {
+      "sources": {
+        "title": "Sources",
+        "description": "How does the integration detect a ring, and where do the snapshot and the recording stream come from?",
+        "data": {
+          "trigger_entity": "Ring trigger (entity)",
+          "trigger_state": "State that means ringing",
+          "camera_entity": "Camera for the snapshot",
+          "stream_url": "RTSP stream for recording (go2rtc)"
+        }
+      },
+      "sensors": {
         "title": "State sensors",
         "description": "These sensors of the Asterisk integration were not found automatically for extensions {ext_door} and {ext_tablet}. Select them or leave them empty; without the door station state sensor a recording only stops after the maximum length.",
         "data": {
@@ -33,7 +33,7 @@
           "ami_connected_entity": "AMI connected sensor"
         }
       },
-      "haus": {
+      "house": {
         "title": "House",
         "description": "Alarm panel and door lock appear in the card; both are optional and can be changed later in the options. mailbox, ansage and freizeichen are created below the base folder.",
         "data": {
@@ -42,7 +42,7 @@
           "base_dir": "Base folder"
         }
       },
-      "pruefung": {
+      "check": {
         "title": "Check",
         "description": "ffmpeg: {ffmpeg}\n\nStream: {stream}\n\nBase folder: {ordner}\n\nAMI connected: {ami}\n\nAsterisk add-on: {app}\n\nsip-core: {sip}\n\nSubmit creates the integration. Dialplan and MOH class are described in the README.",
         "data": {
@@ -75,13 +75,14 @@
           "snapshot_delay": "Snapshot delay",
           "idle_state": "Idle state of the door station",
           "in_use_state": "In-call state of the tablet"
-        }
+        },
+        "description": ""
       },
-      "umzug": {
+      "move": {
         "title": "Change folder",
-        "description": "The base folder changes from {alt} to {neu}. The old folder holds {nachrichten} messages, {ansagen} announcements and {freizeichen} ringback files. With the switch on they are moved to the new folder; files with the same name in the target are left untouched. Afterwards the integration reloads and reads the folders.",
+        "description": "The base folder changes from {alt} to {neu}. The old folder holds {messages} messages, {announcements} announcements and {ringback} ringback files. With the switch on they are moved to the new folder; files with the same name in the target are left untouched. Afterwards the integration reloads and reads the folders.",
         "data": {
-          "dateien_verschieben": "Move files to the new folder"
+          "move_files": "Move files to the new folder"
         }
       }
     },
@@ -94,89 +95,105 @@
       "mailbox": {
         "name": "Mailbox"
       },
-      "sprachansage": {
+      "voice_announcement": {
         "name": "Voice announcement"
       }
     },
     "number": {
-      "klingeldauer": {
+      "ring_duration": {
         "name": "Ring duration"
       },
-      "sprechzeit": {
+      "talk_time": {
         "name": "Talk time after announcement"
       },
-      "aufbewahrung": {
+      "retention": {
         "name": "Retention"
       }
     },
     "select": {
-      "freizeichen": {
-        "name": "Ringback tone"
+      "ringback": {
+        "name": "Ringback tone",
+        "state": {
+          "default": "Default"
+        }
       },
-      "ansage": {
-        "name": "Active announcement"
+      "announcement": {
+        "name": "Active announcement",
+        "state": {
+          "none": "None"
+        }
       },
-      "klingelton": {
+      "ringtone": {
         "name": "Indoor ringtone"
       }
     },
     "sensor": {
-      "nachrichten": {
+      "messages": {
         "name": "Messages"
       },
-      "neue_nachrichten": {
+      "new_messages": {
         "name": "New messages"
       },
-      "ansagen": {
+      "announcements": {
         "name": "Announcements"
       },
-      "freizeichen_dateien": {
+      "ringback_files": {
         "name": "Ringback files"
       },
-      "letztes_klingeln": {
+      "last_ring": {
         "name": "Last ring"
       }
     },
     "binary_sensor": {
-      "aufnahme": {
+      "recording": {
         "name": "Recording"
       },
-      "im_anruf": {
+      "in_call": {
         "name": "Door station in call"
       }
     },
     "event": {
-      "klingel": {
-        "name": "Doorbell"
+      "doorbell": {
+        "name": "Doorbell",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "Ring",
+              "answered": "Answered",
+              "recorded": "Recorded",
+              "message": "Message"
+            }
+          }
+        }
       }
     }
   },
   "services": {
-    "nachricht_loeschen": {
+    "delete_message": {
       "name": "Delete message",
       "description": "Deletes a mailbox entry including its clip and thumbnail.",
       "fields": {
-        "kennung": {
+        "id": {
           "name": "ID",
           "description": "ID of the entry, e.g. 2026-09-06_14-32-10"
         }
       }
     },
-    "nachricht_gesehen": {
+    "mark_message_seen": {
       "name": "Mark message as seen",
       "description": "Marks a mailbox entry as seen.",
       "fields": {
-        "kennung": {
+        "id": {
           "name": "ID",
           "description": "ID of the entry, e.g. 2026-09-06_14-32-10"
         }
       }
     },
-    "alle_gesehen": {
+    "mark_all_seen": {
       "name": "Mark all messages as seen",
       "description": "Marks all mailbox entries as seen."
     },
-    "ansage_aktivieren": {
+    "activate_announcement": {
       "name": "Activate announcement",
       "description": "Makes the named announcement the active one.",
       "fields": {
@@ -186,7 +203,7 @@
         }
       }
     },
-    "ansage_loeschen": {
+    "delete_announcement": {
       "name": "Delete announcement",
       "description": "Deletes an announcement file.",
       "fields": {
@@ -196,7 +213,7 @@
         }
       }
     },
-    "ansage_umbenennen": {
+    "rename_announcement": {
       "name": "Rename announcement",
       "description": "Renames an announcement.",
       "fields": {
@@ -204,21 +221,21 @@
           "name": "Name",
           "description": "Name of the announcement"
         },
-        "neuer_name": {
+        "new_name": {
           "name": "New name",
           "description": "New name of the announcement"
         }
       }
     },
-    "aufnahme_starten": {
+    "start_recording": {
       "name": "Start recording",
       "description": "Starts a manual recording of the door station stream."
     },
-    "aufnahme_stoppen": {
+    "stop_recording": {
       "name": "Stop recording",
       "description": "Stops the running recording."
     },
-    "index_neu": {
+    "rescan": {
       "name": "Rescan folders",
       "description": "Reads the mailbox, announcement, ringback and ringtone folders again."
     },

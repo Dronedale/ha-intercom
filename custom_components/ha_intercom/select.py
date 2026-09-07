@@ -38,7 +38,7 @@ class IntercomFreizeichenSelect(IntercomEntity, SelectEntity, RestoreEntity):
             return
         for f in self.manager.freizeichen:
             if f.name == last.state:
-                self.manager.restore_setting(SETTING_FREIZEICHEN, f.datei)
+                self.manager.restore_setting(SETTING_FREIZEICHEN, f.file)
                 return
 
     @property
@@ -68,7 +68,7 @@ class IntercomAnsageSelect(IntercomEntity, SelectEntity, RestoreEntity):
             return
         for a in self.manager.ansagen:
             if a.name == last.state:
-                self.manager.restore_setting(SETTING_ANSAGE, a.datei)
+                self.manager.restore_setting(SETTING_ANSAGE, a.file)
                 return
 
     @property
@@ -101,7 +101,7 @@ class IntercomKlingeltonSelect(IntercomEntity, SelectEntity, RestoreEntity):
             return
         for k in self.manager.klingeltoene:
             if k.name == last.state:
-                self.manager.restore_setting(SETTING_KLINGELTON, k.datei)
+                self.manager.restore_setting(SETTING_KLINGELTON, k.file)
                 return
 
     @property

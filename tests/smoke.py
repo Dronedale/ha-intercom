@@ -123,20 +123,20 @@ def run_flow(stream: str, base_dir: str, alarm: str | None = None, lock: str | N
     fl_id[0] = flow["flow_id"]
     assert flow["step_id"] == "user", flow
     flow = step({})
-    assert flow.get("step_id") == "quellen", flow
+    assert flow.get("step_id") == "sources", flow
     flow = step({"trigger_entity": "sensor.vto_tuerklingel", "trigger_state": "Doorbell Ring", "stream_url": stream})
     assert flow.get("step_id") == "sip", flow
     flow = step({"ext_door": "103", "ext_tablet": "102"})
-    if flow.get("step_id") == "sensoren":
+    if flow.get("step_id") == "sensors":
         flow = step({"door_state_entity": "sensor.103_state", "tablet_state_entity": "sensor.102_state", "ami_connected_entity": "binary_sensor.ami_connected"})
-    assert flow.get("step_id") == "haus", flow
+    assert flow.get("step_id") == "house", flow
     haus = {"base_dir": base_dir}
     if alarm:
         haus["alarm_entity"] = alarm
     if lock:
         haus["lock_entity"] = lock
     flow = step(haus)
-    assert flow.get("step_id") == "pruefung", flow
+    assert flow.get("step_id") == "check", flow
     flow = step({})
     if flow.get("type") != "create_entry" and (flow.get("errors") or {}).get("base") == "stream_failed":
         print("  Stream nicht erreichbar, wird ignoriert")
@@ -199,19 +199,19 @@ def main() -> int:
         time.sleep(6)
         nachrichten = next(e for e in states() if e.startswith("sensor.") and e.endswith("_messages") and "new" not in e)
         s = states()[nachrichten]
-        print("Nachrichten:", s["state"], json.dumps(s["attributes"].get("eintraege"), ensure_ascii=False)[:400])
-        eintraege = s["attributes"].get("eintraege") or []
+        print("Nachrichten:", s["state"], json.dumps(s["attributes"].get("entries"), ensure_ascii=False)[:400])
+        eintraege = s["attributes"].get("entries") or []
         if not eintraege:
             print("FEHLER: kein Eintrag nach der Aufnahme")
             return 1
-        k = eintraege[0]["kennung"]
+        k = eintraege[0]["id"]
         status, data, hdrs = call("GET", f"/api/ha_intercom/media/clip/{k}", raw=True, headers={"Range": "bytes=0-99"})
         print(f"Clip-Abruf mit Range: HTTP {status}, {len(data)} Byte, Content-Range {hdrs.get('Content-Range')}")
-        status, data, hdrs = call("GET", f"/api/ha_intercom/media/bild/{k}", raw=True)
+        status, data, hdrs = call("GET", f"/api/ha_intercom/media/image/{k}", raw=True)
         print(f"Bild-Abruf: HTTP {status}, {len(data)} Byte, {hdrs.get('Content-Type')}")
-        status, _, _ = call("POST", "/api/services/ha_intercom/nachricht_gesehen", {"kennung": k})
+        status, _, _ = call("POST", "/api/services/ha_intercom/mark_message_seen", {"id": k})
         time.sleep(1)
-        print("gesehen markiert:", states()[nachrichten]["attributes"]["eintraege"][0]["gesehen"])
+        print("gesehen markiert:", states()[nachrichten]["attributes"]["entries"][0]["seen"])
 
     # Ansage-Upload: kurze Testdatei mit ffmpeg erzeugen
     import subprocess, tempfile  # noqa: E402
@@ -223,20 +223,20 @@ def main() -> int:
         f"--{boundary}\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\nTestansage\r\n"
         f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"test.mp3\"\r\nContent-Type: audio/mpeg\r\n\r\n"
     ).encode() + tmp.read_bytes() + f"\r\n--{boundary}--\r\n".encode()
-    status, res, _ = call("POST", "/api/ha_intercom/ansage/upload", body, {"Content-Type": f"multipart/form-data; boundary={boundary}"})
+    status, res, _ = call("POST", "/api/ha_intercom/announcement/upload", body, {"Content-Type": f"multipart/form-data; boundary={boundary}"})
     print("Upload:", status, res)
     if status != 200:
         return 1
     time.sleep(1)
     ansagen = next(e for e in states() if e.startswith("sensor.") and e.endswith("_announcements"))
-    print("Ansagen:", states()[ansagen]["state"], json.dumps(states()[ansagen]["attributes"].get("liste"), ensure_ascii=False)[:300])
-    status, _, _ = call("POST", "/api/services/ha_intercom/ansage_aktivieren", {"name": "Testansage"})
+    print("Ansagen:", states()[ansagen]["state"], json.dumps(states()[ansagen]["attributes"].get("list"), ensure_ascii=False)[:300])
+    status, _, _ = call("POST", "/api/services/ha_intercom/activate_announcement", {"name": "Testansage"})
     time.sleep(1)
     sel = next(e for e in states() if e.startswith("select.") and e.endswith("_active_announcement"))
     print("Aktive Ansage:", states()[sel]["state"])
-    status, data, hdrs = call("GET", f"/api/ha_intercom/media/ansage/{res['ansage']['datei']}", raw=True)
+    status, data, hdrs = call("GET", f"/api/ha_intercom/media/announcement/{res['announcement']['file']}", raw=True)
     print(f"Ansage-Abruf: HTTP {status}, {len(data)} Byte, {hdrs.get('Content-Type')}")
-    status, _, _ = call("POST", "/api/services/ha_intercom/ansage_umbenennen", {"name": "Testansage", "neuer_name": "Urlaub"})
+    status, _, _ = call("POST", "/api/services/ha_intercom/rename_announcement", {"name": "Testansage", "new_name": "Urlaub"})
     time.sleep(1)
     print("Nach Umbenennen:", states()[sel]["state"])
     print("\nRAUCHTEST OK")

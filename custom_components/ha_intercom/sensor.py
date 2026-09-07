@@ -35,7 +35,7 @@ class NachrichtenSensor(IntercomEntity, SensorEntity):
     _attr_icon = "mdi:voicemail"
 
     def __init__(self, manager) -> None:
-        super().__init__(manager, "nachrichten")
+        super().__init__(manager, "messages")
 
     @property
     def native_value(self) -> int:
@@ -44,9 +44,9 @@ class NachrichtenSensor(IntercomEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         return {
-            "neue": self.manager.neue_nachrichten,
-            "eintraege": self.manager.nachrichten_attr(),
-            "aufnahme_laeuft": self.manager.recording,
+            "new": self.manager.neue_nachrichten,
+            "entries": self.manager.nachrichten_attr(),
+            "recording": self.manager.recording,
         }
 
 
@@ -56,7 +56,7 @@ class NeueNachrichtenSensor(IntercomEntity, SensorEntity):
     _attr_icon = "mdi:message-badge"
 
     def __init__(self, manager) -> None:
-        super().__init__(manager, "neue_nachrichten")
+        super().__init__(manager, "new_messages")
 
     @property
     def native_value(self) -> int:
@@ -69,7 +69,7 @@ class AnsagenSensor(IntercomEntity, SensorEntity):
     _attr_icon = "mdi:account-voice"
 
     def __init__(self, manager) -> None:
-        super().__init__(manager, "ansagen")
+        super().__init__(manager, "announcements")
 
     @property
     def native_value(self) -> int:
@@ -77,7 +77,7 @@ class AnsagenSensor(IntercomEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return {"aktiv": self.manager.ansage_current, "liste": self.manager.ansagen_attr()}
+        return {"active": self.manager.ansage_current, "list": self.manager.ansagen_attr()}
 
 
 class FreizeichenSensor(IntercomEntity, SensorEntity):
@@ -86,7 +86,7 @@ class FreizeichenSensor(IntercomEntity, SensorEntity):
     _attr_icon = "mdi:music-box-multiple"
 
     def __init__(self, manager) -> None:
-        super().__init__(manager, "freizeichen_dateien")
+        super().__init__(manager, "ringback_files")
 
     @property
     def native_value(self) -> int:
@@ -94,7 +94,7 @@ class FreizeichenSensor(IntercomEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return {"aktiv": self.manager.freizeichen_current, "liste": self.manager.freizeichen_attr()}
+        return {"active": self.manager.freizeichen_current, "list": self.manager.freizeichen_attr()}
 
 
 class LetztesKlingelnSensor(IntercomEntity, SensorEntity):
@@ -104,7 +104,7 @@ class LetztesKlingelnSensor(IntercomEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, manager) -> None:
-        super().__init__(manager, "letztes_klingeln")
+        super().__init__(manager, "last_ring")
 
     @property
     def native_value(self) -> datetime | None:

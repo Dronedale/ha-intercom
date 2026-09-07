@@ -24,7 +24,7 @@ class AufnahmeSensor(IntercomEntity, BinarySensorEntity):
     _attr_icon = "mdi:record-rec"
 
     def __init__(self, manager) -> None:
-        super().__init__(manager, "aufnahme")
+        super().__init__(manager, "recording")
 
     @property
     def is_on(self) -> bool:
@@ -37,7 +37,7 @@ class ImAnrufSensor(IntercomEntity, BinarySensorEntity):
     _attr_icon = "mdi:phone-in-talk"
 
     def __init__(self, manager) -> None:
-        super().__init__(manager, "im_anruf")
+        super().__init__(manager, "in_call")
 
     @property
     def is_on(self) -> bool:

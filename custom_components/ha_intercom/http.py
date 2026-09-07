@@ -95,4 +95,4 @@ class IntercomUploadView(HomeAssistantView):
         ansage = await manager.async_save_ansage_upload(data, filename, name)
         if ansage is None:
             return self.json_message("Konvertierung fehlgeschlagen", 500)
-        return self.json({"ok": True, "ansage": asdict(ansage)})
+        return self.json({"ok": True, "announcement": asdict(ansage)})

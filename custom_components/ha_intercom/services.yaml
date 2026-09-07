@@ -1,28 +1,28 @@
-nachricht_loeschen:
+delete_message:
   name: Delete message
   description: Deletes a mailbox entry including its clip and thumbnail.
   fields:
-    kennung:
+    id:
       name: ID
       description: ID of the entry, e.g. 2026-09-06_14-32-10
       required: true
       example: 2026-09-06_14-32-10
       selector:
         text: null
-nachricht_gesehen:
+mark_message_seen:
   name: Mark message as seen
   description: Marks a mailbox entry as seen.
   fields:
-    kennung:
+    id:
       name: ID
       description: ID of the entry, e.g. 2026-09-06_14-32-10
       required: true
       selector:
         text: null
-alle_gesehen:
+mark_all_seen:
   name: Mark all messages as seen
   description: Marks all mailbox entries as seen.
-ansage_aktivieren:
+activate_announcement:
   name: Activate announcement
   description: Makes the named announcement the active one.
   fields:
@@ -33,7 +33,7 @@ ansage_aktivieren:
       example: Standard
       selector:
         text: null
-ansage_loeschen:
+delete_announcement:
   name: Delete announcement
   description: Deletes an announcement file.
   fields:
@@ -43,7 +43,7 @@ ansage_loeschen:
       required: true
       selector:
         text: null
-ansage_umbenennen:
+rename_announcement:
   name: Rename announcement
   description: Renames an announcement.
   fields:
@@ -53,19 +53,19 @@ ansage_umbenennen:
       required: true
       selector:
         text: null
-    neuer_name:
+    new_name:
       name: New name
       description: New name of the announcement
       required: true
       selector:
         text: null
-aufnahme_starten:
+start_recording:
   name: Start recording
   description: Starts a manual recording of the door station stream.
-aufnahme_stoppen:
+stop_recording:
   name: Stop recording
   description: Stops the running recording.
-index_neu:
+rescan:
   name: Rescan folders
   description: Reads the mailbox, announcement, ringback and ringtone folders again.
 asterisk_sync:

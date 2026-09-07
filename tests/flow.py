@@ -107,9 +107,9 @@ def options_move(entry_id: str) -> None:
     fid[0] = flow["flow_id"]
     assert flow["step_id"] == "init", flow
     flow = opt({"base_dir": str(new)})
-    assert flow.get("step_id") == "umzug", flow
+    assert flow.get("step_id") == "move", flow
     print("  Umzug:", json.dumps(flow.get("description_placeholders"), ensure_ascii=False))
-    flow = opt({"dateien_verschieben": True})
+    flow = opt({"move_files": True})
     assert flow.get("type") == "create_entry", flow
     time.sleep(4)
     nachher = sum(1 for p in (new / "mailbox").iterdir() if p.is_file())
@@ -121,8 +121,8 @@ def options_move(entry_id: str) -> None:
     flow = opt()
     fid[0] = flow["flow_id"]
     flow = opt({"base_dir": str(old)})
-    assert flow.get("step_id") == "umzug", flow
-    flow = opt({"dateien_verschieben": True})
+    assert flow.get("step_id") == "move", flow
+    flow = opt({"move_files": True})
     assert flow.get("type") == "create_entry", flow
     time.sleep(4)
     zurueck = sum(1 for p in (old / "mailbox").iterdir() if p.is_file())

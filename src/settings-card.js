@@ -154,19 +154,19 @@ export class IntercomSettingsCard extends LitElement {
       groups.push({
         name: t("g_ring"),
         rows: [
-          { entity: ents.klingeldauer, name: t("s_klingeldauer"), description: t("s_klingeldauer_d") },
-          { entity: ents.freizeichen, name: t("s_freizeichen"), description: t("s_freizeichen_d") },
-          { entity: ents.klingelton, name: t("s_klingelton"), description: t("s_klingelton_d") },
+          { entity: ents.ring_duration, name: t("s_klingeldauer"), description: t("s_klingeldauer_d") },
+          { entity: ents.ringback, name: t("s_freizeichen"), description: t("s_freizeichen_d") },
+          { entity: ents.ringtone, name: t("s_klingelton"), description: t("s_klingelton_d") },
         ],
       });
       groups.push({
         name: t("g_answering"),
         rows: [
           { entity: ents.mailbox, name: t("s_mailbox"), description: t("s_mailbox_d") },
-          { entity: ents.sprachansage, name: t("s_sprachansage"), description: t("s_sprachansage_d") },
-          { entity: ents.ansage, name: t("s_ansage"), description: t("s_ansage_d") },
-          { entity: ents.sprechzeit, name: t("s_sprechzeit"), description: t("s_sprechzeit_d") },
-          { entity: ents.aufbewahrung, name: t("s_aufbewahrung"), description: t("s_aufbewahrung_d") },
+          { entity: ents.voice_announcement, name: t("s_sprachansage"), description: t("s_sprachansage_d") },
+          { entity: ents.announcement, name: t("s_ansage"), description: t("s_ansage_d") },
+          { entity: ents.talk_time, name: t("s_sprechzeit"), description: t("s_sprechzeit_d") },
+          { entity: ents.retention, name: t("s_aufbewahrung"), description: t("s_aufbewahrung_d") },
         ],
       });
     }
@@ -177,6 +177,16 @@ export class IntercomSettingsCard extends LitElement {
     return groups
       .map((g) => ({ ...g, rows: g.rows.filter((r) => r && r.entity && stateOf(this.hass, r.entity)) }))
       .filter((g) => g.rows.length);
+  }
+
+  _fmt(st, value) {
+    const v = value === undefined ? st.state : value;
+    try {
+      if (this.hass && typeof this.hass.formatEntityState === "function") return this.hass.formatEntityState(st, v);
+    } catch (e) {
+      /* Rueckfall auf den Rohwert */
+    }
+    return v;
   }
 
   _call(domain, service, data) {
@@ -250,7 +260,7 @@ export class IntercomSettingsCard extends LitElement {
       return html`<div class="srow">
         ${label}
         <select class="sel" aria-label=${name} @change=${(e) => this._setOption(row.entity, e.target.value)}>
-          ${options.map((o) => html`<option value=${o} ?selected=${o === st.state}>${o}</option>`)}
+          ${options.map((o) => html`<option value=${o} ?selected=${o === st.state}>${this._fmt(st, o)}</option>`)}
         </select>
       </div>`;
     }
@@ -277,9 +287,9 @@ export class IntercomSettingsCard extends LitElement {
     reg(info.ext_tablet, "st_tablet");
     const ami = stateOf(this.hass, info.ami_connected_entity);
     if (ami) rows.push({ name: t("st_asterisk"), value: ami.state === "on" ? t("st_connected") : t("st_disconnected"), cls: ami.state === "on" ? "ok" : "danger" });
-    const rec = stateOf(this.hass, ents.aufnahme);
+    const rec = stateOf(this.hass, ents.recording);
     if (rec) rows.push({ name: t("st_recording"), value: rec.state === "on" ? t("st_running") : t("st_idle"), cls: rec.state === "on" ? "" : "muted" });
-    const last = stateOf(this.hass, ents.letztes_klingeln);
+    const last = stateOf(this.hass, ents.last_ring);
     if (last) {
       const ok = last.state && last.state !== "unknown" && last.state !== "unavailable";
       rows.push({ name: t("last_ring"), value: ok ? fmtWhen(last.state, pickLanguage(this.hass, this._config), t) : t("never"), cls: "muted" });

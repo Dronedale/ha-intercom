@@ -77,32 +77,31 @@ from the English names when the entities are created.
 | `number.intercom_retention` | Days until cleanup |
 | `select.intercom_ringback_tone` | Ringback tone: default or file |
 | `select.intercom_active_announcement` | Announcement: none or file |
-| `select.intercom_indoor_ringtone` | Indoor ringtone from `klingeltoene/`; attributes `media_content_id` and `media_content_type` for `media_player.play_media` |
-| `sensor.intercom_messages` | Number of messages, attribute `eintraege` |
+| `select.intercom_indoor_ringtone` | Indoor ringtone from `ringtones/`; attributes `media_content_id` and `media_content_type` for `media_player.play_media` |
+| `sensor.intercom_messages` | Number of messages, attributes `entries`, `new`, `recording` |
 | `sensor.intercom_new_messages` | Number of unseen messages |
-| `sensor.intercom_announcements` | Number of announcements, attribute `liste` |
-| `sensor.intercom_ringback_files` | Number of ringback files, attribute `liste` |
+| `sensor.intercom_announcements` | Number of announcements, attributes `list`, `active` |
+| `sensor.intercom_ringback_files` | Number of ringback files, attributes `list`, `active` |
 | `sensor.intercom_last_ring` | Timestamp of the last ring |
 | `binary_sensor.intercom_recording` | Recording running |
 | `binary_sensor.intercom_door_station_in_call` | Door station not idle |
-| `event.intercom_doorbell` | Events `ring`, `angenommen` (answered), `aufgezeichnet` (recorded), `nachricht` (message) |
+| `event.intercom_doorbell` | Events `ring`, `answered`, `recorded`, `message` |
 
 ## Services
 
-`ha_intercom.nachricht_loeschen` (delete message), `ha_intercom.nachricht_gesehen` (mark message seen),
-`ha_intercom.alle_gesehen` (mark all seen), `ha_intercom.ansage_aktivieren` (activate announcement),
-`ha_intercom.ansage_loeschen` (delete announcement), `ha_intercom.ansage_umbenennen` (rename announcement),
-`ha_intercom.aufnahme_starten` (start recording), `ha_intercom.aufnahme_stoppen` (stop recording),
-`ha_intercom.index_neu` (rescan folders), `ha_intercom.asterisk_sync` (rewrite all astdb values).
+`ha_intercom.delete_message` (`id`), `ha_intercom.mark_message_seen` (`id`), `ha_intercom.mark_all_seen`,
+`ha_intercom.activate_announcement` (`name`), `ha_intercom.delete_announcement` (`name`),
+`ha_intercom.rename_announcement` (`name`, `new_name`), `ha_intercom.start_recording`, `ha_intercom.stop_recording`,
+`ha_intercom.rescan` (read the folders again), `ha_intercom.asterisk_sync` (rewrite all astdb values).
 
 ## Folders
 
 Below the base folder (default `/media/ha-intercom`, changeable in the options):
 
 - `mailbox/` – `<id>.mp4`, `<id>.jpg`, `<id>.json`
-- `ansage/` – announcements: `<name>.wav` (8 kHz, mono) plus `<name>.json`; dropped MP3s are converted
-- `freizeichen/` – ringback source files; `freizeichen/konvertiert/` the WAVs; `freizeichen/aktiv/` the selected file for the MOH class
-- `klingeltoene/` – indoor ringtones (MP3 and other audio files, played unchanged)
+- `announcements/` – `<name>.wav` (8 kHz, mono) plus `<name>.json`; dropped MP3s are converted
+- `ringback/` – ringback source files; `ringback/converted/` the WAVs; `ringback/active/` the selected file for the MOH class
+- `ringtones/` – indoor ringtones (MP3 and other audio files, played unchanged)
 
 The Asterisk add-on must see the same path; `/media` is mounted for add-ons with media access in Home Assistant OS.
 
@@ -110,7 +109,7 @@ The Asterisk add-on must see the same path; `/media` is mounted for add-ons with
 
 The integration does not ring the tablet itself; a separate automation does that on a ring. To change the tone
 without touching the automation, there is the select `select.intercom_indoor_ringtone` (also in the
-settings card under "Ringing"). It lists the files in `klingeltoene/` and carries the media source of the selected
+settings card under "Ringing"). It lists the files in `ringtones/` and carries the media source of the selected
 tone as attributes. In the automation:
 
 ```yaml
@@ -133,11 +132,11 @@ The integration writes into the astdb family `intercom` via AMI `DBPut`:
 
 | Key | Content |
 |---|---|
-| `intercom/klingeldauer` | Seconds the tablet rings |
-| `intercom/sprechzeit` | Seconds of talk time after announcement and beep |
-| `intercom/sprachansage` | `on` or `off` |
-| `intercom/freizeichen` | `standard` or `datei` (`datei` = MOH class `intercom`) |
-| `intercom/ansage` | Path of the active announcement without extension, or empty |
+| `intercom/ring_duration` | Seconds the tablet rings |
+| `intercom/talk_time` | Seconds of talk time after announcement and beep |
+| `intercom/voice_announcement` | `on` or `off` |
+| `intercom/ringback` | `default` or `file` (`file` = MOH class `intercom`) |
+| `intercom/announcement` | Path of the active announcement without extension, or empty |
 
 `extensions.conf` (extension 102 is the tablet the door station calls):
 
@@ -149,22 +148,22 @@ RINGTIME=20                              ; fallback if the astdb is empty
 exten => 102,1,Ringing()
  same => n,Answer()
  same => n,Set(CHANNEL(tonezone)=de)
- same => n,Set(RT=${DB(intercom/klingeldauer)})
+ same => n,Set(RT=${DB(intercom/ring_duration)})
  same => n,ExecIf($["${RT}" = ""]?Set(RT=${RINGTIME}))
- same => n,GotoIf($["${DB(intercom/freizeichen)}" = "datei"]?datei)
+ same => n,GotoIf($["${DB(intercom/ringback)}" = "file"]?file)
  same => n,Dial(${PJSIP_DIAL_CONTACTS(102)},${RT},r)
- same => n,Goto(ende)
- same => n(datei),Dial(${PJSIP_DIAL_CONTACTS(102)},${RT},m(intercom))
- same => n(ende),GotoIf($["${DIALSTATUS}" = "ANSWER"]?done)
- same => n,GotoIf($["${DB(intercom/sprachansage)}" = "on"]?ansage)
+ same => n,Goto(end)
+ same => n(file),Dial(${PJSIP_DIAL_CONTACTS(102)},${RT},m(intercom))
+ same => n(end),GotoIf($["${DIALSTATUS}" = "ANSWER"]?done)
+ same => n,GotoIf($["${DB(intercom/voice_announcement)}" = "on"]?announcement)
  same => n,Playtones(425/480,0/480)
  same => n,Wait(3)
  same => n,Goto(done)
  ; answering machine: announcement (if set), beep, talk time with silence detection
- same => n(ansage),Set(ANSAGE=${DB(intercom/ansage)})
- same => n,ExecIf($["${ANSAGE}" != ""]?Playback(${ANSAGE}))
+ same => n(announcement),Set(ANNOUNCEMENT=${DB(intercom/announcement)})
+ same => n,ExecIf($["${ANNOUNCEMENT}" != ""]?Playback(${ANNOUNCEMENT}))
  same => n,Playback(beep)
- same => n,Set(SZ=${DB(intercom/sprechzeit)})
+ same => n,Set(SZ=${DB(intercom/talk_time)})
  same => n,ExecIf($["${SZ}" = ""]?Set(SZ=30))
  same => n,WaitForNoise(1000,1,8)
  same => n,WaitForSilence(4000,1,${SZ})
@@ -177,7 +176,7 @@ exten => 102,1,Ringing()
 ```ini
 [intercom]
 mode=files
-directory=/media/ha-intercom/freizeichen/aktiv
+directory=/media/ha-intercom/ringback/active
 ```
 
 Notes:
@@ -295,7 +294,7 @@ padding: 12px 16px             # inner padding; panel views have no margin of th
 live_height: 48                # height of the live image in percent of the card height (with fill)
 side_width: 220                # width of the card next to the live image in px
 live_aspect: "16 / 9"          # aspect ratio of the small live image, also used in full screen (a Dahua doorbell stream of 800x480 is "5 / 3")
-default_tab: anruf             # anruf (call), kontakte (contacts) or waehlen (dial)
+default_tab: call              # call, contacts or dial
 language: en                   # de or en, default from the profile
 ```
 

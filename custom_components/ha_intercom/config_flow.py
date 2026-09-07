@@ -298,16 +298,16 @@ class IntercomConfigFlow(ConfigFlow, domain=DOMAIN):
         if env.supervisor and not env.addons:
             return self.async_abort(reason="addon_missing")
         if user_input is not None:
-            return await self.async_step_quellen()
+            return await self.async_step_sources()
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema({}), description_placeholders=_voraussetzungen(env)
         )
 
-    async def async_step_quellen(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_sources(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             self._data.update(user_input)
             return await self.async_step_sip()
-        return self.async_show_form(step_id="quellen", data_schema=_schema_quellen(self.hass, self._data))
+        return self.async_show_form(step_id="sources", data_schema=_schema_quellen(self.hass, self._data))
 
     async def async_step_sip(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         env = await self._umgebung()
@@ -332,16 +332,16 @@ class IntercomConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._data.pop(key, None)
                     self._missing.append(key)
             if self._missing:
-                return await self.async_step_sensoren()
-            return await self.async_step_haus()
+                return await self.async_step_sensors()
+            return await self.async_step_house()
         return self.async_show_form(step_id="sip", data_schema=_schema_sip(self._data, env))
 
-    async def async_step_sensoren(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_sensors(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             self._data.update(user_input)
-            return await self.async_step_haus()
+            return await self.async_step_house()
         return self.async_show_form(
-            step_id="sensoren",
+            step_id="sensors",
             data_schema=_schema_sensoren(self._data, self._missing),
             description_placeholders={
                 "ext_door": self._data.get(CONF_EXT_DOOR, ""),
@@ -349,15 +349,15 @@ class IntercomConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_haus(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_house(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             self._data.pop(CONF_ALARM_ENTITY, None)
             self._data.pop(CONF_LOCK_ENTITY, None)
             self._data.update(user_input)
-            return await self.async_step_pruefung()
-        return self.async_show_form(step_id="haus", data_schema=_schema_haus(self._data))
+            return await self.async_step_check()
+        return self.async_show_form(step_id="house", data_schema=_schema_haus(self._data))
 
-    async def async_step_pruefung(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_check(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         env = await self._umgebung()
         ignore_stream = bool(user_input and user_input.get(CONF_IGNORE_STREAM))
         checks = await self._pruefen()
@@ -374,7 +374,7 @@ class IntercomConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             errors = {}
         return self.async_show_form(
-            step_id="pruefung",
+            step_id="check",
             data_schema=_schema_pruefung(not checks["stream"][0]),
             errors=errors,
             description_placeholders=self._ergebnis(checks, env),
@@ -436,12 +436,12 @@ class IntercomOptionsFlow(OptionsFlow):
                 counts = await self.hass.async_add_executor_job(_count_media, old)
                 if counts["gesamt"]:
                     self._pending, self._old, self._new = user_input, old, new
-                    return await self.async_step_umzug()
+                    return await self.async_step_move()
             return self.async_create_entry(title="", data=user_input)
         env = await async_discover(self.hass)
         return self.async_show_form(step_id="init", data_schema=_schema_options(current, env))
 
-    async def async_step_umzug(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_move(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None and self._pending is not None:
             if user_input.get(CONF_MOVE_FILES, True):
@@ -455,14 +455,14 @@ class IntercomOptionsFlow(OptionsFlow):
                 return self.async_create_entry(title="", data=self._pending)
         counts = await self.hass.async_add_executor_job(_count_media, self._old)
         return self.async_show_form(
-            step_id="umzug",
+            step_id="move",
             data_schema=vol.Schema({vol.Optional(CONF_MOVE_FILES, default=True): BOOL}),
             errors=errors,
             description_placeholders={
                 "alt": self._old,
                 "neu": self._new,
-                "nachrichten": str(counts[DIR_MAILBOX]),
-                "ansagen": str(counts[DIR_ANSAGE]),
-                "freizeichen": str(counts[DIR_FREIZEICHEN]),
+                "messages": str(counts[DIR_MAILBOX]),
+                "announcements": str(counts[DIR_ANSAGE]),
+                "ringback": str(counts[DIR_FREIZEICHEN]),
             },
         )

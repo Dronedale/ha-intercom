@@ -26,7 +26,7 @@ class KlingelEvent(IntercomEntity, EventEntity):
     _attr_event_types = EVENT_TYPES
 
     def __init__(self, manager) -> None:
-        super().__init__(manager, "klingel")
+        super().__init__(manager, "doorbell")
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
