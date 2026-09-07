@@ -11,6 +11,27 @@ from .manager import IntercomManager
 
 VERSION = "0.1.0"
 
+# Englische Namen fuer die Objekt-IDs, damit die Entitaets-IDs in jeder Sprache gleich lauten
+# (z. B. number.intercom_ring_duration). Die Anzeigenamen kommen aus den Uebersetzungen.
+OBJECT_ID_NAMES = {
+    "mailbox": "Mailbox",
+    "sprachansage": "Voice announcement",
+    "klingeldauer": "Ring duration",
+    "sprechzeit": "Talk time after announcement",
+    "aufbewahrung": "Retention",
+    "freizeichen": "Ringback tone",
+    "ansage": "Active announcement",
+    "klingelton": "Indoor ringtone",
+    "nachrichten": "Messages",
+    "neue_nachrichten": "New messages",
+    "ansagen": "Announcements",
+    "freizeichen_dateien": "Ringback files",
+    "letztes_klingeln": "Last ring",
+    "aufnahme": "Recording",
+    "im_anruf": "Door station in call",
+    "klingel": "Doorbell",
+}
+
 
 class IntercomEntity(Entity):
     """Basisklasse: Geraetezuordnung, eindeutige ID, Aktualisierung ueber den Manager."""
@@ -30,6 +51,11 @@ class IntercomEntity(Entity):
             model="Türsprechanlage",
             sw_version=VERSION,
         )
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        """Objekt-ID aus dem englischen Namen, unabhaengig von der Sprache der Instanz."""
+        return OBJECT_ID_NAMES.get(self._key) or super().suggested_object_id
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
