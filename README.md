@@ -8,10 +8,10 @@ browser; the configuration dialog makes it adaptable to other door stations.
 
 | What | Why | Required |
 |---|---|---|
-| **Asterisk add-on** (TECH7Fox, Home Assistant OS or Supervised) | The PBX; ringback files are reloaded in the add-on via `moh reload` | yes |
-| **Asterisk integration** (TECH7Fox, HACS) | AMI access: ring duration, talk time, announcement and ringback tone go into the Asterisk database via `DBPut`; state sensors of the extensions (`sensor.<extension>_state`, `binary_sensor.<extension>_registered`, `binary_sensor.ami_connected`) | yes |
-| **sip-core** (TECH7Fox, HACS) | The phone in the browser (`window.sipCore`) for calling, answering, hanging up and dialing in the card | for the call section |
-| **go2rtc stream** of the door station (RTSP) | Recording of the clips; with a Dahua VTO preferably the HD stream | yes |
+| **[Asterisk add-on](https://github.com/TECH7Fox/asterisk-hass-addons)** (TECH7Fox, Home Assistant OS or Supervised) | The PBX; ringback files are reloaded in the add-on via `moh reload` | yes |
+| **[Asterisk integration](https://github.com/TECH7Fox/Asterisk-integration)** (TECH7Fox, HACS) | AMI access: ring duration, talk time, announcement and ringback tone go into the Asterisk database via `DBPut`; state sensors of the extensions (`sensor.<extension>_state`, `binary_sensor.<extension>_registered`, `binary_sensor.ami_connected`) | yes |
+| **[sip-core](https://github.com/TECH7Fox/sipcore-hass-integration)** (TECH7Fox, HACS) | The phone in the browser (`window.sipCore`) for calling, answering, hanging up and dialing in the card | for the call section |
+| **RTSP stream** of the door station, e.g. from [go2rtc](https://github.com/AlexxIT/go2rtc) | Recording of the clips; with a Dahua VTO preferably the HD stream | yes |
 | **ffmpeg** | Recording and conversion; included in Home Assistant OS | yes |
 | Camera entity of the door station | Snapshot as thumbnail | no |
 | Entity that reports the ring | Trigger (e.g. `sensor.vto_tuerklingel` → `Doorbell Ring`) | yes |
@@ -349,20 +349,12 @@ the Asterisk states; `tests/smoke.py` runs onboarding, configuration dialog and 
 the configuration dialog and the options dialog with the folder move. `tests/fake_asterisk` provides the service
 `asterisk.send_action` there so the dialog passes without a real Asterisk integration.
 
-## Projects used
+## Third-party notices
 
-The integration builds on these projects and would not be possible without them:
-
-- [Asterisk add-on for Home Assistant](https://github.com/TECH7Fox/asterisk-hass-addons) by TECH7Fox – the PBX
-- [Asterisk integration](https://github.com/TECH7Fox/Asterisk-integration) by TECH7Fox – AMI access and state sensors of the extensions
-- [sip-core](https://github.com/TECH7Fox/sipcore-hass-integration) by TECH7Fox – the phone in the browser (`window.sipCore`)
-- [go2rtc](https://github.com/AlexxIT/go2rtc) by AlexxIT – RTSP stream of the door station for recording
-- [Advanced Camera Card](https://github.com/dermotduffy/advanced-camera-card) by Dermot Duffy – live image in the examples
-- [Dahua VTO](https://github.com/myhomeiot/DahuaVTO) by myhomeiot – ring events and sliders of the Dahua door station
-- [Dahua VTO Custom Ringbacks Tutorial](https://github.com/thewolfman56/Dahua-VTO-Custom-Ringbacks-Tutorial) – model for the dialplan with answer before ringing
-- [Lit](https://lit.dev), [esbuild](https://esbuild.github.io) and [Material Design Icons](https://github.com/Templarian/MaterialDesign-SVG) for the card
-
-Asterisk itself is a project by [Sangoma](https://www.asterisk.org).
+The card bundle ships two libraries: [Lit](https://lit.dev) (MIT License, Google LLC) and icon paths from
+[Material Design Icons](https://github.com/Templarian/MaterialDesign-SVG) (Apache License 2.0, Pictogrammers).
+Everything else this integration talks to (Asterisk, the TECH7Fox add-on and integrations, go2rtc, camera cards)
+is installed separately and stays under its own license.
 
 ## License
 
