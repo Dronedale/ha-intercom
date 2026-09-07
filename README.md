@@ -349,7 +349,9 @@ npm run build      # writes custom_components/ha_intercom/frontend/intercom-card
 Local test instance: `.venv/bin/hass -c .test/config` (port 8124); `tests/seed.py` prints the login URL and seeds
 the Asterisk states; `tests/smoke.py` runs onboarding, configuration dialog and a recording; `tests/flow.py` runs
 the configuration dialog and the options dialog with the folder move. `tests/fake_asterisk` provides the service
-`asterisk.send_action` there so the dialog passes without a real Asterisk integration.
+`asterisk.send_action` there so the dialog passes without a real Asterisk integration; copy the folder into the test
+instance's `custom_components` and rename `manifest.json.dist` to `manifest.json` (the repository must contain only
+one `manifest.json` for the HACS checks).
 
 ## Third-party notices
 
