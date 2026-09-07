@@ -1,0 +1,11 @@
+*.pyc
+.DS_Store
+.test/
+.venv/
+__pycache__/
+node_modules/
+privat/
+www/
+*.log
+.vscode/
+.idea/

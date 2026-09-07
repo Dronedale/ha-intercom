@@ -1,0 +1,667 @@
+<title>Intercom Haustür</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+<style>
+  :root {
+    --ground: #f2f4f7;
+    --card: #ffffff;
+    --card-2: #eef1f5;
+    --line: #dfe4ea;
+    --text: #1f2429;
+    --text-2: #6b7480;
+    --accent: #0b8bd6;
+    --accent-soft: #e3f3fc;
+    --ok: #2e9e5b;
+    --ok-soft: #e4f5ea;
+    --danger: #d4443b;
+    --danger-soft: #fbe7e5;
+    --live-ground: #1d2126;
+    --thumb-a: #4a4f57;
+    --thumb-b: #22252a;
+    --shadow: 0 1px 2px rgba(20, 30, 40, .06), 0 6px 18px rgba(20, 30, 40, .06);
+    --radius: 14px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101215; --card: #1b1e23; --card-2: #23272d; --line: #2e333a;
+      --text: #e6e9ed; --text-2: #9aa3ae; --accent: #3fb0ee; --accent-soft: #163040;
+      --ok: #4fc27b; --ok-soft: #173424; --danger: #ef6a61; --danger-soft: #3d1f1d;
+      --live-ground: #0b0d10; --thumb-a: #383d45; --thumb-b: #16181c;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #101215; --card: #1b1e23; --card-2: #23272d; --line: #2e333a;
+    --text: #e6e9ed; --text-2: #9aa3ae; --accent: #3fb0ee; --accent-soft: #163040;
+    --ok: #4fc27b; --ok-soft: #173424; --danger: #ef6a61; --danger-soft: #3d1f1d;
+    --live-ground: #0b0d10; --thumb-a: #383d45; --thumb-b: #16181c;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--ground); color: var(--text);
+    font-family: Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 14px; line-height: 1.4; -webkit-font-smoothing: antialiased;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  svg { width: 22px; height: 22px; fill: currentColor; flex: none; }
+
+  /* Mock-Leiste, nur fuer diese Vorschau */
+  .mockbar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; background: var(--card); border-bottom: 1px solid var(--line); }
+  .mockbar .name { font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+  .mockbar .tag { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .seg button { background: transparent; border: 0; padding: 5px 11px; color: var(--text-2); }
+  .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+  .segs { display: flex; gap: 8px; }
+
+  /* Ansicht: passt in den Bildschirm, kein Seitenscrollen */
+  .app { flex: 1; min-height: 0; display: grid; grid-template-rows: auto 1fr; gap: 10px; padding: 12px 16px 14px; max-width: 1600px; width: 100%; margin: 0 auto; }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .head h1 { font-size: 22px; font-weight: 400; margin: 0; }
+  .head .chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .chip2 { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px; background: var(--card); box-shadow: var(--shadow); font-size: 12px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); display: inline-block; }
+  .chip2.muted .dot { background: var(--text-2); }
+  .gear { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--text-2); }
+
+  .main { min-height: 0; display: grid; grid-template-columns: minmax(340px, 2fr) 3fr; gap: 14px; }
+  .left { min-height: 0; display: grid; grid-template-rows: auto 1fr; gap: 14px; overflow: hidden; }
+  .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); min-height: 0; }
+
+  /* Livebild klein, mit Vergroessern */
+  .live { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: hidden; background: var(--live-ground); box-shadow: var(--shadow); }
+  .scene { position: absolute; inset: 0;
+    background: radial-gradient(ellipse 34% 70% at 50% 58%, rgba(255, 244, 214, .16), transparent 70%), linear-gradient(180deg, #2b3138 0%, #1c2024 55%, #121417 100%); }
+  .scene::before { content: ""; position: absolute; left: 41%; top: 12%; width: 18%; height: 80%; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, #3b4148, #22262b); box-shadow: inset 0 0 0 2px rgba(255,255,255,.05), 0 0 60px rgba(255, 236, 190, .08); }
+  .scene::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 16%; background: linear-gradient(180deg, transparent, rgba(0,0,0,.55)); }
+  .ov { position: absolute; display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px; border-radius: 999px; background: rgba(10, 12, 14, .55); color: #f3f5f7; font-size: 12px; font-weight: 500; letter-spacing: .06em; backdrop-filter: blur(6px); font-variant-numeric: tabular-nums; }
+  .ov .dot { background: #ff5a4f; box-shadow: 0 0 0 3px rgba(255, 90, 79, .25); }
+  .live .ov.l { top: 10px; left: 10px; } .live .ov.r { top: 10px; right: 10px; }
+  .tools { position: absolute; left: 10px; bottom: 10px; display: flex; gap: 6px; }
+  .tools button { width: 34px; height: 34px; border: 0; border-radius: 9px; background: rgba(10, 12, 14, .55); color: #f3f5f7; display: grid; place-items: center; backdrop-filter: blur(6px); }
+  .tools button[aria-pressed="true"] { background: var(--accent); }
+  .tools button svg { width: 19px; height: 19px; }
+  .live .zoombtn { position: absolute; right: 10px; bottom: 10px; height: 34px; padding: 0 12px 0 10px; border: 0; border-radius: 9px; background: rgba(10, 12, 14, .55); color: #f3f5f7; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; font-size: 13px; backdrop-filter: blur(6px); }
+  .live .zoombtn svg { width: 18px; height: 18px; }
+
+  /* Sprechanlage mit Reitern Anruf, Kontakte, Waehlen */
+  .call { display: grid; grid-template-rows: auto auto 1fr; overflow: hidden; }
+  .tabs { display: flex; gap: 4px; padding: 0 12px; border-bottom: 1px solid var(--line); }
+  .tabs button { border: 0; background: transparent; padding: 10px 12px; color: var(--text-2); font-weight: 500; position: relative; }
+  .tabs button[aria-selected="true"] { color: var(--accent); }
+  .tabs button[aria-selected="true"]::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: -1px; height: 2px; border-radius: 2px; background: var(--accent); }
+  .tabs .cnt { margin-left: 6px; font-size: 11px; padding: 1px 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+  .pane { min-height: 0; display: grid; grid-template-rows: auto 1fr; overflow: hidden; }
+  .pane[hidden] { display: none; }
+  .contact { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; padding: 9px 16px; border-top: 1px solid var(--line); }
+  .contact:first-child { border-top: 0; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--card-2); color: var(--text-2); font-weight: 500; }
+  .contact .t { font-weight: 500; }
+  .contact .s { color: var(--text-2); font-size: 12px; display: flex; align-items: center; gap: 6px; }
+  .contact .s .dot { width: 7px; height: 7px; }
+  .contact .s .dot.off { background: var(--text-2); }
+  .callbtn { width: 40px; height: 40px; border: 0; border-radius: 12px; background: var(--ok-soft); color: var(--ok); display: grid; place-items: center; }
+  .callbtn svg { width: 20px; height: 20px; }
+  .dial { display: grid; gap: 10px; padding: 12px 16px; align-content: start; }
+  .dial .num { height: 44px; border-radius: 12px; background: var(--card-2); display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-size: 20px; font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+  .dial .num small { font-size: 12px; letter-spacing: 0; color: var(--text-2); }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .keys button { height: 46px; border: 0; border-radius: 12px; background: var(--card-2); font-size: 18px; font-weight: 500; }
+  .keys button small { display: block; font-size: 9px; letter-spacing: .12em; color: var(--text-2); font-weight: 400; line-height: 1; }
+  .dial .go { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .dial .go .btn { padding: 11px 14px; }
+  .dial .go .back { width: 46px; border: 0; border-radius: 12px; background: var(--card-2); color: var(--text-2); display: grid; place-items: center; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px 4px; }
+  .card-head h2 { margin: 0; font-size: 15px; font-weight: 500; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; letter-spacing: .03em; border-radius: 999px; padding: 3px 10px; background: var(--accent-soft); color: var(--accent); }
+  .badge .dot { background: currentColor; }
+  .callstate { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; padding: 8px 16px 2px; }
+  .ring { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); position: relative; }
+  .ring::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--accent); opacity: .5; animation: pulse 1.6s ease-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .ring::after { animation: none; } }
+  @keyframes pulse { 0% { transform: scale(.85); opacity: .6; } 100% { transform: scale(1.25); opacity: 0; } }
+  .callstate .big { font-size: 18px; font-weight: 500; line-height: 1.2; }
+  .callstate .meta { color: var(--text-2); font-variant-numeric: tabular-nums; font-size: 13px; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 16px 6px; }
+  .btn { border: 0; border-radius: 12px; padding: 13px 14px; font-size: 15px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 9px; background: var(--card-2); }
+  .btn.ok { background: var(--ok); color: #fff; }
+  .btn.danger { background: var(--danger); color: #fff; }
+  .rows { display: grid; align-content: start; overflow: auto; }
+  .row { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; padding: 9px 16px; border-top: 1px solid var(--line); }
+  .row .ic { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; background: var(--card-2); color: var(--text-2); }
+  .row .ic.ok { background: var(--ok-soft); color: var(--ok); }
+  .row .t { font-weight: 500; }
+  .row .s { color: var(--text-2); font-size: 12px; }
+  .pill { border: 0; border-radius: 999px; padding: 8px 14px; background: var(--card-2); font-weight: 500; }
+  .pill.accent { background: var(--accent-soft); color: var(--accent); }
+  .pill.small { padding: 6px 11px; font-size: 13px; }
+  .vol { grid-template-columns: 40px 1fr auto; }
+  .track { position: relative; height: 36px; border-radius: 11px; background: var(--card-2); overflow: hidden; }
+  .track .fill { position: absolute; inset: 0 55% 0 0; background: var(--accent-soft); border-right: 3px solid var(--accent); }
+  .track .val { position: absolute; inset: 0; display: flex; align-items: center; padding-left: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .track .val small { color: var(--text-2); font-weight: 400; margin-left: 6px; }
+  .mute { width: 36px; height: 36px; border-radius: 11px; border: 0; background: var(--card-2); color: var(--text-2); display: grid; place-items: center; }
+  .mute svg { width: 19px; height: 19px; }
+
+  /* Mailbox: Karte fuellt die Hoehe, nur die Liste scrollt */
+  .mailbox { display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
+  .list { overflow: auto; border-top: 1px solid var(--line); }
+  .msg { display: grid; grid-template-columns: 80px 1fr auto; gap: 12px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--line); }
+  .thumb { position: relative; width: 80px; height: 45px; border-radius: 7px; overflow: hidden; background: radial-gradient(ellipse 40% 60% at 55% 60%, rgba(255, 240, 205, .18), transparent 70%), linear-gradient(180deg, var(--thumb-a), var(--thumb-b)); }
+  .thumb::before { content: ""; position: absolute; left: 42%; top: 18%; width: 16%; height: 82%; background: rgba(255,255,255,.07); border-radius: 3px 3px 0 0; }
+  .thumb .person { position: absolute; left: 30%; bottom: 0; width: 22%; height: 62%; border-radius: 40% 40% 4px 4px; background: rgba(255,255,255,.14); }
+  .thumb .len { position: absolute; right: 4px; bottom: 3px; font-size: 10px; padding: 1px 4px; border-radius: 4px; background: rgba(0,0,0,.6); color: #fff; font-variant-numeric: tabular-nums; }
+  .msg .when { font-weight: 500; display: flex; align-items: center; gap: 8px; }
+  .msg .when .new { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .msg .kind { color: var(--text-2); font-size: 12px; }
+  .msg .kind.note { color: var(--text); }
+  .ctl { display: flex; gap: 2px; }
+  .icb { width: 38px; height: 38px; border: 0; border-radius: 10px; background: transparent; color: var(--text-2); display: grid; place-items: center; }
+  .icb:hover { background: var(--card-2); }
+  .icb.play { background: var(--accent-soft); color: var(--accent); }
+  .msg.open { background: var(--card-2); border-bottom: 0; }
+  .player { display: grid; gap: 8px; padding: 2px 16px 12px; background: var(--card-2); border-bottom: 1px solid var(--line); }
+  .video { position: relative; aspect-ratio: 16 / 9; max-height: 260px; border-radius: 10px; overflow: hidden; background: var(--live-ground); }
+  .video .scene { opacity: .9; }
+  .video .play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 58px; height: 58px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); color: #1f2429; display: grid; place-items: center; }
+  .video .play svg { width: 28px; height: 28px; margin-left: 3px; }
+  .video .bar { position: absolute; left: 12px; right: 12px; bottom: 9px; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; color: #e6e9ed; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .video .bar .line { height: 4px; border-radius: 2px; background: rgba(255,255,255,.3); position: relative; }
+  .video .bar .line::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 34%; border-radius: 2px; background: #fff; }
+  .player .foot { display: flex; justify-content: space-between; align-items: center; color: var(--text-2); font-size: 12px; }
+  .player .foot .del { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--danger); font-weight: 500; padding: 5px 8px; border-radius: 8px; }
+
+  /* Ansagen: eingeklappt, Fuss der Mailbox-Karte */
+  .ann-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px; border-top: 1px solid var(--line); background: transparent; border-left: 0; border-right: 0; border-bottom: 0; width: 100%; text-align: left; }
+  .ann-head .l { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+  .ann-head .s { color: var(--text-2); font-size: 12px; font-weight: 400; }
+  .ann-head svg { transition: transform .2s; }
+  .ann-head[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .ann-body { display: grid; gap: 4px; padding: 0 16px 12px; }
+  .ann-body[hidden] { display: none; }
+  .ann { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 6px 0; }
+  .radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; }
+  .radio.on { border-color: var(--accent); }
+  .radio.on::after { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+  .ann .t { font-weight: 500; }
+  .ann .s { color: var(--text-2); font-size: 12px; }
+  .rec { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-top: 6px; }
+  .rec .btn { padding: 10px 12px; font-size: 14px; }
+  .rec select { font: inherit; color: var(--text); background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; padding: 9px 10px; }
+  .recording { display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; align-items: center; margin-top: 6px; padding: 10px 12px; border-radius: 12px; background: var(--danger-soft); }
+  .recording[hidden] { display: none; }
+  .recdot { width: 12px; height: 12px; border-radius: 50%; background: var(--danger); animation: blink 1s steps(2, start) infinite; }
+  @media (prefers-reduced-motion: reduce) { .recdot { animation: none; } }
+  @keyframes blink { to { visibility: hidden; } }
+  .recmeta .t { font-weight: 500; }
+  .recmeta .s { color: var(--text-2); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .bars { display: flex; align-items: flex-end; gap: 3px; height: 26px; }
+  .bars i { width: 4px; height: 20%; border-radius: 2px; background: var(--danger); display: block; transition: height .12s; }
+  .recording .btn { padding: 9px 14px; font-size: 14px; }
+  .ann.fresh { background: var(--accent-soft); border-radius: 10px; padding: 8px 10px; margin: 4px -10px 0; }
+  .ann input { font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; width: 100%; }
+
+  /* Vergroessertes Livebild als Vollbild-Ebene mit den Anrufknoepfen */
+  .zoom { position: fixed; inset: 0; z-index: 20; background: #000; display: none; }
+  body.zoomed .zoom { display: block; }
+  .zoom .scene { inset: 0; }
+  .zoom .ov.l { top: 16px; left: 16px; } .zoom .ov.r { top: 16px; right: 16px; }
+  .zoom .close { position: absolute; top: 16px; right: 16px; height: 36px; padding: 0 12px; border: 0; border-radius: 9px; background: rgba(10, 12, 14, .6); color: #f3f5f7; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+  .zoom .ov.r { right: 150px; }
+  .zoom .bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 20px 22px; display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; background: linear-gradient(180deg, transparent, rgba(0,0,0,.75)); }
+  .zoom .bar .tools { position: static; }
+  .zoom .bar .mid { display: flex; gap: 10px; justify-content: center; }
+  .zoom .bar .btn { min-width: 170px; padding: 15px 18px; font-size: 16px; }
+  .zoom .bar .btn.ghost { background: rgba(255,255,255,.14); color: #fff; }
+
+  /* Einstellungen: eigene Karte, hier als Popup ueber der Ansicht */
+  .dim { position: fixed; inset: 0; z-index: 30; background: rgba(8, 10, 12, .55); display: none; align-items: center; justify-content: center; padding: 20px; }
+  body.settings .dim { display: flex; }
+  .settings-card { width: min(560px, 100%); max-height: calc(100vh - 40px); overflow: auto; background: var(--card); border-radius: var(--radius); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+  .settings-card .card-head { padding: 14px 18px 8px; position: sticky; top: 0; background: var(--card); z-index: 1; }
+  .settings-card .close { width: 36px; height: 36px; border: 0; border-radius: 10px; background: var(--card-2); color: var(--text-2); display: grid; place-items: center; }
+  .sgroup { padding: 4px 18px 10px; }
+  .sgroup h3 { margin: 12px 0 4px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); font-weight: 500; }
+  .srow { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+  .srow:first-of-type { border-top: 0; }
+  .srow .t { font-weight: 500; }
+  .srow .s { color: var(--text-2); font-size: 12px; }
+  .srow.wide { grid-template-columns: 1fr; }
+  .sw { width: 46px; height: 26px; border-radius: 999px; border: 0; background: var(--line); position: relative; }
+  .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: left .15s; }
+  .sw[aria-checked="true"] { background: var(--accent); }
+  .sw[aria-checked="true"]::after { left: 23px; }
+  .strack { position: relative; height: 34px; border-radius: 10px; background: var(--card-2); overflow: hidden; margin-top: 6px; }
+  .strack .fill { position: absolute; inset: 0; background: var(--accent-soft); border-right: 3px solid var(--accent); }
+  .strack .val { position: absolute; inset: 0; display: flex; align-items: center; padding-left: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .strack .val small { color: var(--text-2); font-weight: 400; margin-left: 6px; }
+  .sel { font: inherit; color: var(--text); background: var(--card-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .sfoot { padding: 6px 18px 16px; color: var(--text-2); font-size: 12px; }
+
+  /* Handy: eine Spalte, nur die Nachrichtenliste scrollt */
+  body.phone .app { max-width: 430px; padding: 10px 10px 12px; }
+  body.phone .head h1 { font-size: 18px; }
+  body.phone .head .chips { display: none; }
+  body.phone .main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  body.phone .left { grid-template-rows: auto auto; overflow: visible; }
+  body.phone .live { aspect-ratio: 21 / 9; }
+  body.phone .call .rows { display: none; }
+  body.phone .callstate .meta { display: none; }
+  body.phone .actions { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 860px) {
+    .main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .left { grid-template-rows: auto auto; overflow: visible; }
+    .head .chips { display: none; }
+  }
+</style>
+
+<div class="mockbar">
+  <div class="name">Intercom Haustür <span class="tag">Mockup v2, statisch</span></div>
+  <div class="segs">
+    <div class="seg" role="group" aria-label="Farbschema">
+      <button type="button" data-theme-btn="light" aria-pressed="false">Hell</button>
+      <button type="button" data-theme-btn="dark" aria-pressed="false">Dunkel</button>
+      <button type="button" data-theme-btn="" aria-pressed="true">System</button>
+    </div>
+    <div class="seg" role="group" aria-label="Gerät">
+      <button type="button" data-width="tablet" aria-pressed="true">Tablet</button>
+      <button type="button" data-width="phone" aria-pressed="false">Handy</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="head">
+    <h1>Doorbell</h1>
+    <div class="chips">
+      <span class="chip2"><span class="dot"></span>Türstation 103</span>
+      <span class="chip2"><span class="dot"></span>Wandtablet 102</span>
+      <span class="chip2 muted"><span class="dot"></span>Letztes Klingeln 16:18</span>
+      <button type="button" class="gear" aria-label="Einstellungen" data-settings="open"><svg viewBox="0 0 24 24"><path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/></svg></button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="left">
+      <section class="live" aria-label="Livebild Türstation">
+        <div class="scene"></div>
+        <div class="ov l"><span class="dot"></span>LIVE</div>
+        <div class="ov r">16:18:09</div>
+        <div class="tools">
+          <button type="button" aria-label="Mikrofon" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/></svg></button>
+          <button type="button" aria-label="Ton" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/></svg></button>
+        </div>
+        <button type="button" class="zoombtn" data-zoom="open"><svg viewBox="0 0 24 24"><path d="M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z"/></svg>Vergrößern</button>
+      </section>
+
+      <section class="card call" aria-label="Sprechanlage">
+        <div class="card-head"><h2>Sprechanlage</h2><span class="badge"><span class="dot"></span>Es klingelt</span></div>
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" aria-selected="true" data-tab="anruf">Anruf</button>
+          <button type="button" role="tab" aria-selected="false" data-tab="kontakte">Kontakte<span class="cnt">4</span></button>
+          <button type="button" role="tab" aria-selected="false" data-tab="waehlen">Wählen</button>
+        </div>
+        <div class="pane" data-pane="anruf">
+        <div>
+          <div class="callstate">
+            <div class="ring"><svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg></div>
+            <div>
+              <div class="big">Besucher an der Haustür</div>
+              <div class="meta">Klingelt seit 6 s · Freizeichen läuft · Ansage in 14 s</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn ok"><svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg>Annehmen</button>
+            <button type="button" class="btn danger"><svg viewBox="0 0 24 24"><path d="M12,9C10.4,9 8.85,9.25 7.4,9.72V12.82C7.4,13.22 7.17,13.56 6.84,13.72C5.86,14.21 4.97,14.84 4.17,15.57C4,15.75 3.75,15.86 3.5,15.86C3.2,15.86 2.95,15.74 2.77,15.56L0.29,13.08C0.11,12.9 0,12.65 0,12.38C0,12.1 0.11,11.85 0.29,11.67C3.34,8.77 7.46,7 12,7C16.54,7 20.66,8.77 23.71,11.67C23.89,11.85 24,12.1 24,12.38C24,12.65 23.89,12.9 23.71,13.08L21.23,15.56C21.05,15.74 20.8,15.86 20.5,15.86C20.25,15.86 20,15.75 19.82,15.57C19.03,14.84 18.14,14.21 17.16,13.72C16.83,13.56 16.6,13.22 16.6,12.82V9.72C15.15,9.25 13.6,9 12,9Z"/></svg>Auflegen</button>
+          </div>
+        </div>
+        <div class="rows">
+          <div class="row" tabindex="0">
+            <div class="ic ok"><svg viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/></svg></div>
+            <div><div class="t">Haustür</div><div class="s">Verriegelt</div></div>
+            <button type="button" class="pill accent">Öffnen</button>
+          </div>
+          <div class="row" tabindex="0">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg></div>
+            <div><div class="t">Türstation</div><div class="s">Von hier aus anrufen</div></div>
+            <button type="button" class="pill small">Anrufen</button>
+          </div>
+          <div class="row vol" tabindex="0">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/></svg></div>
+            <div class="track"><div class="fill"></div><div class="val">45<small>% Tablet</small></div></div>
+            <button type="button" class="mute" aria-label="Stumm"><svg viewBox="0 0 24 24"><path d="M12,4L9.91,6.09L12,8.18M4.27,3L3,4.27L7.73,9H3V15H7L12,20V13.27L16.25,17.53C15.58,18.04 14.83,18.46 14,18.7V20.77C15.38,20.45 16.63,19.82 17.68,18.96L19.73,21L21,19.73L12,10.73M19,12C19,12.94 18.8,13.82 18.46,14.64L19.97,16.15C20.62,14.91 21,13.5 21,12C21,7.72 18,4.14 14,3.23V5.29C16.89,6.15 19,8.83 19,12M16.5,12C16.5,10.23 15.5,8.71 14,7.97V10.18L16.45,12.63C16.5,12.43 16.5,12.21 16.5,12Z"/></svg></button>
+          </div>
+        </div>
+        </div>
+
+        <div class="pane" data-pane="kontakte" hidden>
+          <div class="rows" style="grid-template-rows:none">
+            <div class="contact">
+              <div class="avatar">D</div>
+              <div><div class="t">Daniel</div><div class="s"><span class="dot"></span>100 · erreichbar</div></div>
+              <button type="button" class="callbtn" aria-label="Daniel anrufen"><svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg></button>
+            </div>
+            <div class="contact">
+              <div class="avatar">C</div>
+              <div><div class="t">Christin</div><div class="s"><span class="dot off"></span>101 · nicht registriert</div></div>
+              <button type="button" class="callbtn" aria-label="Christin anrufen"><svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg></button>
+            </div>
+            <div class="contact">
+              <div class="avatar"><svg viewBox="0 0 24 24"><path d="M19,18H5V6H19M21,4H3C1.89,4 1,4.89 1,6V18A2,2 0 0,0 3,20H21A2,2 0 0,0 23,18V6C23,4.89 22.1,4 21,4Z"/></svg></div>
+              <div><div class="t">Wandtablet</div><div class="s"><span class="dot"></span>102 · erreichbar</div></div>
+              <button type="button" class="callbtn" aria-label="Wandtablet anrufen"><svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg></button>
+            </div>
+            <div class="contact">
+              <div class="avatar"><svg viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/></svg></div>
+              <div><div class="t">Türstation</div><div class="s"><span class="dot"></span>103 · erreichbar</div></div>
+              <button type="button" class="callbtn" aria-label="Türstation anrufen"><svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="waehlen" hidden>
+          <div class="dial">
+            <div class="num"><span>1 0 3</span><small>Türstation</small></div>
+            <div class="keys">
+              <button type="button">1</button><button type="button">2<small>ABC</small></button><button type="button">3<small>DEF</small></button>
+              <button type="button">4<small>GHI</small></button><button type="button">5<small>JKL</small></button><button type="button">6<small>MNO</small></button>
+              <button type="button">7<small>PQRS</small></button><button type="button">8<small>TUV</small></button><button type="button">9<small>WXYZ</small></button>
+              <button type="button">*</button><button type="button">0<small>+</small></button><button type="button">#</button>
+            </div>
+            <div class="go">
+              <button type="button" class="btn ok"><svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg>Anrufen</button>
+              <button type="button" class="back" aria-label="Löschen"><svg viewBox="0 0 24 24"><path d="M22,3H7C6.31,3 5.77,3.35 5.41,3.88L0,12L5.41,20.11C5.77,20.64 6.31,21 7,21H22A2,2 0 0,0 24,19V5A2,2 0 0,0 22,3M19,15.59L17.59,17L14,13.41L10.41,17L9,15.59L12.59,12L9,8.41L10.41,7L14,10.59L17.59,7L19,8.41L15.41,12L19,15.59Z"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card mailbox" aria-label="Mailbox">
+      <div class="card-head">
+        <h2>Mailbox</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="badge">3 neu</span>
+          <button type="button" class="pill small">Alle gesehen</button>
+        </div>
+      </div>
+
+      <div class="list">
+        <div class="msg open" tabindex="0">
+          <div class="thumb"><div class="person"></div><span class="len">0:58</span></div>
+          <div><div class="when"><span class="new"></span>Heute 14:32</div><div class="kind note">Nachricht hinterlassen · 38 s gesprochen</div></div>
+          <div class="ctl"><button type="button" class="icb play" aria-label="Abspielen"><svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg></button><button type="button" class="icb" aria-label="Löschen"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button></div>
+        </div>
+        <div class="player">
+          <div class="video">
+            <div class="scene"></div>
+            <button type="button" class="play" aria-label="Wiedergabe"><svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg></button>
+            <div class="bar"><span>0:20</span><div class="line"></div><span>0:58</span></div>
+          </div>
+          <div class="foot">
+            <span>Clip 58 s · Ansage ab 0:20 · Bild und Ton von der Türstation</span>
+            <button type="button" class="del"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>Löschen</button>
+          </div>
+        </div>
+        <div class="msg" tabindex="0">
+          <div class="thumb" style="--thumb-a:#5a5245"><div class="person" style="left:52%"></div><span class="len">0:21</span></div>
+          <div><div class="when"><span class="new"></span>Heute 11:07</div><div class="kind">Besucher, keine Nachricht · 21 s</div></div>
+          <div class="ctl"><button type="button" class="icb" aria-label="Abspielen"><svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg></button><button type="button" class="icb" aria-label="Löschen"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button></div>
+        </div>
+        <div class="msg" tabindex="0">
+          <div class="thumb"><div class="person" style="width:18%;height:50%"></div><span class="len">1:04</span></div>
+          <div><div class="when"><span class="new"></span>Gestern 18:05</div><div class="kind note">Nachricht hinterlassen · 44 s gesprochen</div></div>
+          <div class="ctl"><button type="button" class="icb" aria-label="Abspielen"><svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg></button><button type="button" class="icb" aria-label="Löschen"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button></div>
+        </div>
+        <div class="msg" tabindex="0">
+          <div class="thumb" style="--thumb-a:#3f4a55"><div class="person" style="left:36%"></div><span class="len">0:26</span></div>
+          <div><div class="when">Do., 04.09. 09:41</div><div class="kind">Angenommen am Tablet · Gespräch 26 s</div></div>
+          <div class="ctl"><button type="button" class="icb" aria-label="Abspielen"><svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg></button><button type="button" class="icb" aria-label="Löschen"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button></div>
+        </div>
+        <div class="msg" tabindex="0">
+          <div class="thumb" style="--thumb-a:#4c4a52"><div class="person" style="left:44%;height:70%"></div><span class="len">0:19</span></div>
+          <div><div class="when">Mi., 03.09. 17:22</div><div class="kind">Besucher, keine Nachricht · 19 s</div></div>
+          <div class="ctl"><button type="button" class="icb" aria-label="Abspielen"><svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg></button><button type="button" class="icb" aria-label="Löschen"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button></div>
+        </div>
+        <div class="msg" tabindex="0">
+          <div class="thumb" style="--thumb-a:#55504a"><div class="person" style="left:28%"></div><span class="len">0:47</span></div>
+          <div><div class="when">Di., 02.09. 12:03</div><div class="kind note">Nachricht hinterlassen · 27 s gesprochen</div></div>
+          <div class="ctl"><button type="button" class="icb" aria-label="Abspielen"><svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg></button><button type="button" class="icb" aria-label="Löschen"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button></div>
+        </div>
+      </div>
+
+      <div>
+        <button type="button" class="ann-head" aria-expanded="false" data-ann-toggle>
+          <span class="l"><svg viewBox="0 0 24 24"><path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/></svg>Ansagen <span class="s">Aktiv: Standard · 2 vorhanden</span></span>
+          <svg viewBox="0 0 24 24"><path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/></svg>
+        </button>
+        <div class="ann-body" hidden>
+          <div class="ann">
+            <div class="radio on" role="radio" aria-checked="true" tabindex="0"></div>
+            <div><div class="t">Standard</div><div class="s">Aufgesprochen 01.09., 11 s · „Wir sind gerade nicht da…“</div></div>
+            <div class="ctl"><button type="button" class="icb" aria-label="Anhören"><svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg></button><button type="button" class="icb" aria-label="Löschen"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button></div>
+          </div>
+          <div class="ann">
+            <div class="radio" role="radio" aria-checked="false" tabindex="0"></div>
+            <div><div class="t">Urlaub</div><div class="s">MP3 abgelegt 28.08., 9 s</div></div>
+            <div class="ctl"><button type="button" class="icb" aria-label="Anhören"><svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg></button><button type="button" class="icb" aria-label="Löschen"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button></div>
+          </div>
+          <div class="rec" id="rec-idle">
+            <button type="button" class="btn" data-rec="start"><svg viewBox="0 0 24 24"><path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/></svg>Neue Ansage aufnehmen</button>
+            <span class="s" style="color:var(--text-2);font-size:12px">Mikrofon dieses Geräts</span>
+          </div>
+          <div class="recording" id="rec-live" hidden>
+            <div class="recdot"></div>
+            <div class="recmeta"><div class="t">Aufnahme läuft</div><div class="s"><span id="rec-time">0:00</span> · sprich jetzt Richtung Gerät</div></div>
+            <div class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <button type="button" class="btn danger" data-rec="stop"><svg viewBox="0 0 24 24"><path d="M18,18H6V6H18V18Z"/></svg>Stopp</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="zoom" aria-label="Livebild groß" role="dialog">
+  <div class="scene"></div>
+  <div class="ov l"><span class="dot"></span>LIVE · Türstation 103</div>
+  <div class="ov r">16:18:09</div>
+  <button type="button" class="close" data-zoom="close"><svg viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg>Verkleinern</button>
+  <div class="bar">
+    <div class="tools">
+      <button type="button" aria-label="Mikrofon" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/></svg></button>
+      <button type="button" aria-label="Ton" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/></svg></button>
+    </div>
+    <div class="mid">
+      <button type="button" class="btn ok"><svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg>Annehmen</button>
+      <button type="button" class="btn danger"><svg viewBox="0 0 24 24"><path d="M12,9C10.4,9 8.85,9.25 7.4,9.72V12.82C7.4,13.22 7.17,13.56 6.84,13.72C5.86,14.21 4.97,14.84 4.17,15.57C4,15.75 3.75,15.86 3.5,15.86C3.2,15.86 2.95,15.74 2.77,15.56L0.29,13.08C0.11,12.9 0,12.65 0,12.38C0,12.1 0.11,11.85 0.29,11.67C3.34,8.77 7.46,7 12,7C16.54,7 20.66,8.77 23.71,11.67C23.89,11.85 24,12.1 24,12.38C24,12.65 23.89,12.9 23.71,13.08L21.23,15.56C21.05,15.74 20.8,15.86 20.5,15.86C20.25,15.86 20,15.75 19.82,15.57C19.03,14.84 18.14,14.21 17.16,13.72C16.83,13.56 16.6,13.22 16.6,12.82V9.72C15.15,9.25 13.6,9 12,9Z"/></svg>Auflegen</button>
+      <button type="button" class="btn ghost"><svg viewBox="0 0 24 24"><path d="M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V10A2,2 0 0,1 6,8H15V6A3,3 0 0,0 12,3A3,3 0 0,0 9,6H7A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,17A2,2 0 0,0 14,15A2,2 0 0,0 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17Z"/></svg>Tür öffnen</button>
+    </div>
+    <div></div>
+  </div>
+</div>
+
+<div class="dim" data-settings="close">
+  <section class="settings-card" role="dialog" aria-label="Intercom Einstellungen" data-settings="stay">
+    <div class="card-head">
+      <h2>Intercom Einstellungen</h2>
+      <button type="button" class="close" aria-label="Schließen" data-settings="close"><svg viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg></button>
+    </div>
+
+    <div class="sgroup">
+      <h3>Klingeln</h3>
+      <div class="srow wide">
+        <div><div class="t">Klingeldauer</div><div class="s">So lange klingelt das Tablet, danach Besetztton oder Ansage</div></div>
+        <div class="strack"><div class="fill" style="right:64%"></div><div class="val">20<small>s</small></div></div>
+      </div>
+      <div class="srow">
+        <div><div class="t">Freizeichen an der Tür</div><div class="s">Standard oder eine Datei aus dem Ordner</div></div>
+        <select class="sel"><option>Standard</option><option>ringback-tone</option><option>hedwigsTheme</option><option>waiting_ringtone_01</option></select>
+      </div>
+    </div>
+
+    <div class="sgroup">
+      <h3>Anrufbeantworter</h3>
+      <div class="srow">
+        <div><div class="t">Mailbox</div><div class="s">Jedes Klingeln mit Clip und Vorschaubild speichern</div></div>
+        <button type="button" class="sw" role="switch" aria-checked="true" aria-label="Mailbox"></button>
+      </div>
+      <div class="srow">
+        <div><div class="t">Sprachansage</div><div class="s">Nach der Klingeldauer Ansage, Piepton und Sprechzeit statt Besetztton</div></div>
+        <button type="button" class="sw" role="switch" aria-checked="true" aria-label="Sprachansage"></button>
+      </div>
+      <div class="srow wide">
+        <div><div class="t">Sprechzeit nach der Ansage</div><div class="s">Endet früher, wenn der Besucher schweigt</div></div>
+        <div class="strack"><div class="fill" style="right:60%"></div><div class="val">30<small>s</small></div></div>
+      </div>
+      <div class="srow wide">
+        <div><div class="t">Aufbewahrung</div><div class="s">Ältere Nachrichten werden nachts gelöscht</div></div>
+        <div class="strack"><div class="fill" style="right:70%"></div><div class="val">30<small>Tage</small></div></div>
+      </div>
+    </div>
+
+    <div class="sgroup">
+      <h3>Türstation</h3>
+      <div class="srow wide">
+        <div><div class="t">Lautsprecher</div><div class="s">Lautstärke an der Tür, gilt für Freizeichen, Ansage und Gespräch</div></div>
+        <div class="strack"><div class="fill" style="right:35%"></div><div class="val">65<small>%</small></div></div>
+      </div>
+      <div class="srow wide">
+        <div><div class="t">Mikrofon</div><div class="s">Empfindlichkeit des Mikrofons an der Tür</div></div>
+        <div class="strack"><div class="fill" style="right:25%"></div><div class="val">75<small>%</small></div></div>
+      </div>
+    </div>
+
+    <div class="sgroup">
+      <h3>Benachrichtigungen</h3>
+      <div class="srow">
+        <div><div class="t">Push an Daniel</div><div class="s">Beim Klingeln und bei neuer Nachricht</div></div>
+        <button type="button" class="sw" role="switch" aria-checked="true" aria-label="Push an Daniel"></button>
+      </div>
+      <div class="srow">
+        <div><div class="t">Push an Christin</div><div class="s">Beim Klingeln und bei neuer Nachricht</div></div>
+        <button type="button" class="sw" role="switch" aria-checked="false" aria-label="Push an Christin"></button>
+      </div>
+    </div>
+
+    <div class="sgroup">
+      <h3>Status</h3>
+      <div class="srow"><div><div class="t">Türstation 103</div><div class="s">Registriert, letzter Anruf 16:18</div></div><span class="badge ok"><span class="dot"></span>Verbunden</span></div>
+      <div class="srow"><div><div class="t">Wandtablet 102</div><div class="s">Registriert über WebSocket</div></div><span class="badge ok"><span class="dot"></span>Verbunden</span></div>
+    </div>
+    <div class="sfoot">Dieselbe Karte kann statt als Popup auch auf einer eigenen Ansicht liegen. In der Hauptkarte stellst du ein, ob das Zahnrad ein Popup öffnet oder zu einem Pfad wie /haus-einstellungen/tuerklingel führt.</div>
+  </section>
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    document.querySelectorAll('[data-settings]').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        var mode = el.getAttribute('data-settings');
+        if (mode === 'stay') { e.stopPropagation(); return; }
+        if (mode === 'close' && e.target !== el && el.classList.contains('dim')) { return; }
+        document.body.classList.toggle('settings', mode === 'open');
+      });
+    });
+    /* Aufnahme-Simulation: Aufnehmen, Stopp, neue Ansage erscheint in der Liste */
+    var recIdle = document.getElementById('rec-idle');
+    var recLive = document.getElementById('rec-live');
+    var recTime = document.getElementById('rec-time');
+    var bars = recLive.querySelectorAll('.bars i');
+    var recTimer = null, recSecs = 0;
+    function fmt(s) { return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+    document.querySelector('[data-rec="start"]').addEventListener('click', function () {
+      recSecs = 0; recTime.textContent = '0:00';
+      recIdle.hidden = true; recLive.hidden = false;
+      recTimer = setInterval(function () {
+        recSecs += 1; recTime.textContent = fmt(recSecs);
+        bars.forEach(function (b) { b.style.height = (15 + Math.random() * 85) + '%'; });
+      }, 250);
+    });
+    document.querySelector('[data-rec="stop"]').addEventListener('click', function () {
+      clearInterval(recTimer);
+      var secs = Math.max(1, Math.round(recSecs / 4));
+      recLive.hidden = true; recIdle.hidden = false;
+      var now = new Date();
+      var row = document.createElement('div');
+      row.className = 'ann fresh';
+      row.innerHTML = '<div class="radio" role="radio" aria-checked="false" tabindex="0"></div>'
+        + '<div><input type="text" value="Ansage ' + ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2) + '" aria-label="Name der Ansage"><div class="s">Gerade aufgenommen · ' + secs + ' s · Name ändern und mit dem Kreis aktivieren</div></div>'
+        + '<div class="ctl"><button type="button" class="icb play" aria-label="Anhören"><svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg></button><button type="button" class="icb" aria-label="Löschen"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button></div>';
+      var body = document.querySelector('.ann-body');
+      body.insertBefore(row, body.firstChild);
+      row.querySelector('.radio').addEventListener('click', function () {
+        document.querySelectorAll('.ann .radio').forEach(function (r) { r.classList.remove('on'); r.setAttribute('aria-checked', 'false'); });
+        this.classList.add('on'); this.setAttribute('aria-checked', 'true');
+        document.querySelector('.ann-head .s').textContent = 'Aktiv: ' + row.querySelector('input').value + ' · ' + document.querySelectorAll('.ann').length + ' vorhanden';
+      });
+    });
+    var tabs = document.querySelectorAll('[data-tab]');
+    tabs.forEach(function (t) {
+      t.addEventListener('click', function () {
+        var name = t.getAttribute('data-tab');
+        tabs.forEach(function (x) { x.setAttribute('aria-selected', x === t ? 'true' : 'false'); });
+        document.querySelectorAll('[data-pane]').forEach(function (p) { p.hidden = p.getAttribute('data-pane') !== name; });
+      });
+    });
+    document.querySelectorAll('.sw').forEach(function (sw) {
+      sw.addEventListener('click', function () {
+        sw.setAttribute('aria-checked', sw.getAttribute('aria-checked') === 'true' ? 'false' : 'true');
+      });
+    });
+    var themeBtns = document.querySelectorAll('[data-theme-btn]');
+    themeBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var v = b.getAttribute('data-theme-btn');
+        if (v) { root.setAttribute('data-theme', v); } else { root.removeAttribute('data-theme'); }
+        themeBtns.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+    var widthBtns = document.querySelectorAll('[data-width]');
+    widthBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.body.classList.toggle('phone', b.getAttribute('data-width') === 'phone');
+        widthBtns.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+    document.querySelectorAll('[data-zoom]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.body.classList.toggle('zoomed', b.getAttribute('data-zoom') === 'open');
+      });
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { document.body.classList.remove('zoomed'); document.body.classList.remove('settings'); } });
+    var annBtn = document.querySelector('[data-ann-toggle]');
+    var annBody = document.querySelector('.ann-body');
+    annBtn.addEventListener('click', function () {
+      var open = annBtn.getAttribute('aria-expanded') === 'true';
+      annBtn.setAttribute('aria-expanded', open ? 'false' : 'true');
+      annBody.hidden = open;
+    });
+    var player = document.querySelector('.player');
+    var msgs = document.querySelectorAll('.msg');
+    msgs.forEach(function (m) {
+      m.addEventListener('click', function (e) {
+        var btn = e.target.closest('.icb');
+        if (btn && btn.getAttribute('aria-label') === 'Löschen') { return; }
+        var wasOpen = m.classList.contains('open');
+        msgs.forEach(function (x) { x.classList.remove('open'); x.querySelector('.icb').classList.remove('play'); });
+        if (!wasOpen) {
+          m.classList.add('open');
+          m.querySelector('.icb').classList.add('play');
+          m.insertAdjacentElement('afterend', player);
+          player.hidden = false;
+        } else {
+          player.hidden = true;
+        }
+      });
+    });
+  })();
+</script>

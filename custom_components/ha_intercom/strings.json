@@ -1,0 +1,92 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Voraussetzungen",
+        "description": "Auf diesem Home Assistant gefunden:\n\nAsterisk-App (Add-on): {app}\n\nAsterisk-Integration: {asterisk}\n\nsip-core (Nebenstellen): {sip}\n\nDie Asterisk-App und die Asterisk-Integration sind Voraussetzung. Ohne sip-core funktioniert die Karte, nur nicht der Anrufteil. Weiter richtet Quellen, Sprechanlage und Haus ein und prüft am Ende ffmpeg, Stream und Ordner."
+      },
+      "quellen": {
+        "title": "Quellen",
+        "description": "Woran erkennt die Integration ein Klingeln, und woher kommen Standbild und Stream für die Aufnahme?",
+        "data": {
+          "trigger_entity": "Klingel-Auslöser (Entität)",
+          "trigger_state": "Zustand, der ein Klingeln bedeutet",
+          "camera_entity": "Kamera für das Standbild",
+          "stream_url": "RTSP-Stream für die Aufnahme (go2rtc)"
+        }
+      },
+      "sip": {
+        "title": "Sprechanlage",
+        "description": "Nebenstellen der Türstation und des Tablets. Die Liste stammt aus sip-core und der Asterisk-Integration, eigene Werte sind möglich. Die Zustandssensoren werden daraus abgeleitet.",
+        "data": {
+          "ext_door": "Nebenstelle Türstation",
+          "ext_tablet": "Nebenstelle Tablet",
+          "addon_slug": "Asterisk-App (für moh reload)"
+        }
+      },
+      "sensoren": {
+        "title": "Zustandssensoren",
+        "description": "Diese Sensoren der Asterisk-Integration wurden für die Nebenstellen {ext_door} und {ext_tablet} nicht automatisch gefunden. Bitte auswählen oder leer lassen; ohne Zustandssensor der Türstation endet die Aufnahme erst nach der Höchstdauer.",
+        "data": {
+          "door_state_entity": "Zustandssensor Türstation",
+          "tablet_state_entity": "Zustandssensor Tablet",
+          "ami_connected_entity": "Sensor AMI verbunden"
+        }
+      },
+      "haus": {
+        "title": "Haus",
+        "description": "Alarmzentrale und Türschloss erscheinen in der Karte, beides ist optional und lässt sich später in den Optionen ändern. Unter dem Basisordner entstehen mailbox, ansage und freizeichen.",
+        "data": {
+          "alarm_entity": "Alarmzentrale",
+          "lock_entity": "Türschloss",
+          "base_dir": "Basisordner"
+        }
+      },
+      "pruefung": {
+        "title": "Prüfung",
+        "description": "ffmpeg: {ffmpeg}\n\nStream: {stream}\n\nBasisordner: {ordner}\n\nAMI verbunden: {ami}\n\nAsterisk-App: {app}\n\nsip-core: {sip}\n\nAbsenden legt die Integration an. Wählplan und MOH-Klasse sind im README beschrieben.",
+        "data": {
+          "ignore_stream": "Stream-Fehler ignorieren und trotzdem anlegen"
+        }
+      }
+    },
+    "error": {
+      "ffmpeg_missing": "ffmpeg oder ffprobe fehlt auf diesem System.",
+      "dir_failed": "Der Basisordner lässt sich nicht anlegen oder beschreiben.",
+      "stream_failed": "Der Stream antwortet nicht. Adresse prüfen oder den Fehler bewusst ignorieren."
+    },
+    "abort": {
+      "single_instance_allowed": "Es kann nur ein Intercom eingerichtet werden.",
+      "asterisk_missing": "Die Asterisk-Integration (Dienst asterisk.send_action) wurde nicht gefunden. Sie ist Voraussetzung, siehe README.",
+      "addon_missing": "Die Asterisk-App (Add-on) ist nicht installiert. Sie ist Voraussetzung, siehe README."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Intercom Optionen",
+        "data": {
+          "stream_url": "RTSP-Stream für die Aufnahme",
+          "addon_slug": "Asterisk-App (für moh reload)",
+          "alarm_entity": "Alarmzentrale",
+          "lock_entity": "Türschloss",
+          "base_dir": "Basisordner",
+          "max_clip_seconds": "Höchstdauer eines Clips",
+          "snapshot_delay": "Verzögerung des Standbilds",
+          "idle_state": "Ruhezustand der Türstation",
+          "in_use_state": "Gesprächszustand des Tablets"
+        }
+      },
+      "umzug": {
+        "title": "Ordner wechseln",
+        "description": "Der Basisordner wechselt von {alt} nach {neu}. Im alten Ordner liegen {nachrichten} Nachrichten, {ansagen} Ansagen und {freizeichen} Freizeichen-Dateien. Mit dem Schalter werden sie in den neuen Ordner verschoben, gleichnamige Dateien im Ziel bleiben unangetastet. Danach lädt sich die Integration neu und liest die Ordner ein.",
+        "data": {
+          "dateien_verschieben": "Dateien in den neuen Ordner verschieben"
+        }
+      }
+    },
+    "error": {
+      "move_failed": "Verschieben fehlgeschlagen, der Basisordner wurde nicht geändert. Zielordner und Rechte prüfen."
+    }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Prerequisites",
+        "description": "Found on this Home Assistant:\n\nAsterisk add-on: {app}\n\nAsterisk integration: {asterisk}\n\nsip-core (extensions): {sip}\n\nThe Asterisk add-on and the Asterisk integration are required. Without sip-core the card works, only the call section is unavailable. Next sets up sources, intercom and house, and finally checks ffmpeg, stream and folder."
+      },
+      "quellen": {
+        "title": "Sources",
+        "description": "How does the integration detect a ring, and where do the snapshot and the recording stream come from?",
+        "data": {
+          "trigger_entity": "Ring trigger (entity)",
+          "trigger_state": "State that means ringing",
+          "camera_entity": "Camera for the snapshot",
+          "stream_url": "RTSP stream for recording (go2rtc)"
+        }
+      },
+      "sip": {
+        "title": "Intercom",
+        "description": "Extensions of the door station and the tablet. The list comes from sip-core and the Asterisk integration; custom values are allowed. The state sensors are derived from them.",
+        "data": {
+          "ext_door": "Door station extension",
+          "ext_tablet": "Tablet extension",
+          "addon_slug": "Asterisk add-on (for moh reload)"
+        }
+      },
+      "sensoren": {
+        "title": "State sensors",
+        "description": "These sensors of the Asterisk integration were not found automatically for extensions {ext_door} and {ext_tablet}. Select them or leave them empty; without the door station state sensor a recording only stops after the maximum length.",
+        "data": {
+          "door_state_entity": "Door station state sensor",
+          "tablet_state_entity": "Tablet state sensor",
+          "ami_connected_entity": "AMI connected sensor"
+        }
+      },
+      "haus": {
+        "title": "House",
+        "description": "Alarm panel and door lock appear in the card; both are optional and can be changed later in the options. mailbox, ansage and freizeichen are created below the base folder.",
+        "data": {
+          "alarm_entity": "Alarm panel",
+          "lock_entity": "Door lock",
+          "base_dir": "Base folder"
+        }
+      },
+      "pruefung": {
+        "title": "Check",
+        "description": "ffmpeg: {ffmpeg}\n\nStream: {stream}\n\nBase folder: {ordner}\n\nAMI connected: {ami}\n\nAsterisk add-on: {app}\n\nsip-core: {sip}\n\nSubmit creates the integration. Dialplan and MOH class are described in the README.",
+        "data": {
+          "ignore_stream": "Ignore the stream error and create anyway"
+        }
+      }
+    },
+    "error": {
+      "ffmpeg_missing": "ffmpeg or ffprobe is missing on this system.",
+      "dir_failed": "The base folder cannot be created or written.",
+      "stream_failed": "The stream does not respond. Check the address or deliberately ignore the error."
+    },
+    "abort": {
+      "single_instance_allowed": "Only one Intercom can be configured.",
+      "asterisk_missing": "The Asterisk integration (service asterisk.send_action) was not found. It is required, see README.",
+      "addon_missing": "The Asterisk add-on is not installed. It is required, see README."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Intercom options",
+        "data": {
+          "stream_url": "RTSP stream for recording",
+          "addon_slug": "Asterisk add-on (for moh reload)",
+          "alarm_entity": "Alarm panel",
+          "lock_entity": "Door lock",
+          "base_dir": "Base folder",
+          "max_clip_seconds": "Maximum clip length",
+          "snapshot_delay": "Snapshot delay",
+          "idle_state": "Idle state of the door station",
+          "in_use_state": "In-call state of the tablet"
+        }
+      },
+      "umzug": {
+        "title": "Change folder",
+        "description": "The base folder changes from {alt} to {neu}. The old folder holds {nachrichten} messages, {ansagen} announcements and {freizeichen} ringback files. With the switch on they are moved to the new folder; files with the same name in the target are left untouched. Afterwards the integration reloads and reads the folders.",
+        "data": {
+          "dateien_verschieben": "Move files to the new folder"
+        }
+      }
+    },
+    "error": {
+      "move_failed": "Moving failed, the base folder was not changed. Check the target folder and permissions."
+    }
+  }
+}

@@ -1,0 +1,41 @@
+"""Testinstanz mit Zustaenden versorgen (Asterisk-Sensoren nachbilden) und die Anmelde-URL ausgeben."""
+
+from __future__ import annotations
+
+import base64
+import json
+import sys
+
+sys.path.insert(0, __file__.rsplit("/", 1)[0])
+from smoke import BASE, CLIENT_ID, call, onboard, set_state, wait_ready  # noqa: E402
+
+STATES = {
+    "sensor.vto_tuerklingel": "Doorbell No Ring",
+    "sensor.103_state": "Not in use",
+    "sensor.102_state": "Not in use",
+    "sensor.100_state": "Not in use",
+    "sensor.101_state": "Not in use",
+    "binary_sensor.ami_connected": "on",
+    "binary_sensor.103_registered": "on",
+    "binary_sensor.102_registered": "on",
+    "binary_sensor.100_registered": "on",
+    "binary_sensor.101_registered": "off",
+}
+
+
+def main() -> int:
+    wait_ready()
+    onboard()
+    for eid, st in STATES.items():
+        set_state(eid, st)
+    status, res, _ = call("POST", "/auth/login_flow", {"client_id": CLIENT_ID, "handler": ["homeassistant", None], "redirect_uri": CLIENT_ID})
+    assert status == 200, res
+    status, res, _ = call("POST", f"/auth/login_flow/{res['flow_id']}", {"username": "test", "password": "test1234", "client_id": CLIENT_ID})
+    assert status == 200 and res.get("type") == "create_entry", res
+    state = base64.b64encode(json.dumps({"hassUrl": BASE, "clientId": CLIENT_ID}).encode()).decode()
+    print("LOGIN_URL", f"{BASE}/?auth_callback=1&code={res['result']}&state={state}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

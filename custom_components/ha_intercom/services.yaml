@@ -1,0 +1,82 @@
+nachricht_loeschen:
+  name: Nachricht löschen
+  description: Löscht einen Mailbox-Eintrag samt Clip und Vorschaubild.
+  fields:
+    kennung:
+      name: Kennung
+      description: Kennung des Eintrags, z. B. 2026-09-06_14-32-10
+      required: true
+      example: "2026-09-06_14-32-10"
+      selector:
+        text:
+
+nachricht_gesehen:
+  name: Nachricht als gesehen markieren
+  description: Markiert einen Mailbox-Eintrag als gesehen.
+  fields:
+    kennung:
+      name: Kennung
+      description: Kennung des Eintrags
+      required: true
+      selector:
+        text:
+
+alle_gesehen:
+  name: Alle Nachrichten als gesehen markieren
+  description: Setzt den Zähler neuer Nachrichten auf null.
+
+ansage_aktivieren:
+  name: Ansage aktivieren
+  description: Macht eine Ansage zur aktiven Ansage des Anrufbeantworters. "Keine" schaltet die Ansage ab.
+  fields:
+    name:
+      name: Name
+      description: Anzeigename oder Dateiname der Ansage
+      required: true
+      example: "Standard"
+      selector:
+        text:
+
+ansage_loeschen:
+  name: Ansage löschen
+  description: Löscht eine Ansage-Datei.
+  fields:
+    name:
+      name: Name
+      description: Anzeigename oder Dateiname der Ansage
+      required: true
+      selector:
+        text:
+
+ansage_umbenennen:
+  name: Ansage umbenennen
+  description: Ändert den Anzeigenamen einer Ansage.
+  fields:
+    name:
+      name: Name
+      description: Bisheriger Anzeigename oder Dateiname
+      required: true
+      selector:
+        text:
+    neuer_name:
+      name: Neuer Name
+      description: Neuer Anzeigename
+      required: true
+      selector:
+        text:
+
+aufnahme_starten:
+  name: Aufnahme starten
+  description: Startet eine Clip-Aufnahme von Hand, zum Testen.
+
+aufnahme_stoppen:
+  name: Aufnahme stoppen
+  description: Beendet eine laufende Clip-Aufnahme.
+
+index_neu:
+  name: Ordner neu einlesen
+  description: Liest Mailbox, Ansagen und Freizeichen neu ein und konvertiert neue Dateien.
+
+asterisk_sync:
+  name: Einstellungen nach Asterisk übertragen
+  description: Schreibt alle Einstellungen erneut in die Asterisk-Datenbank (astdb).

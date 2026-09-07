@@ -1,0 +1,25 @@
+{
+  "domain": "ha_intercom",
+  "name": "Intercom",
+  "codeowners": [
+    "@Dronedale"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "http",
+    "camera",
+    "websocket_api"
+  ],
+  "after_dependencies": [
+    "asterisk",
+    "hassio",
+    "dahua_vto",
+    "lovelace"
+  ],
+  "documentation": "https://github.com/Dronedale/ha-intercom",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/Dronedale/ha-intercom/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
