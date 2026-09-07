@@ -351,10 +351,11 @@ the configuration dialog and the options dialog with the folder move. `tests/fak
 
 ## Third-party notices
 
-The card bundle ships two libraries: [Lit](https://lit.dev) (MIT License, Google LLC) and icon paths from
-[Material Design Icons](https://github.com/Templarian/MaterialDesign-SVG) (Apache License 2.0, Pictogrammers).
-Everything else this integration talks to (Asterisk, the TECH7Fox add-on and integrations, go2rtc, camera cards)
-is installed separately and stays under its own license.
+The card bundle ships two libraries: [Lit](https://lit.dev) (BSD 3-Clause License, Google LLC) and icon paths from
+[Material Design Icons](https://github.com/Templarian/MaterialDesign-SVG) (Apache License 2.0, Pictogrammers). The
+license texts are in [`custom_components/ha_intercom/frontend/LICENSES.md`](custom_components/ha_intercom/frontend/LICENSES.md).
+Everything else this integration talks to (Asterisk, the TECH7Fox add-on and integrations, sip-core, go2rtc, camera
+cards) is installed separately, is only used through its public interfaces and stays under its own license.
 
 ## License
 
