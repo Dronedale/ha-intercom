@@ -1,7 +1,5 @@
 # Intercom for Home Assistant
 
-*English version. Deutsche Fassung: [README.de.md](README.de.md).*
-
 A door intercom with video mailbox, voice announcements, ringback tones and ring duration, delivered as one
 integration plus a full-screen card. Built for a Dahua VTO on the Asterisk add-on (TECH7Fox) with sip-core in the
 browser; the configuration dialog makes it adaptable to other door stations.
