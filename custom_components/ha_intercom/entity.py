@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 from .manager import IntercomManager
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 # Englische Namen fuer die Objekt-IDs, damit die Entitaets-IDs in jeder Sprache gleich lauten
 # (z. B. number.intercom_ring_duration). Die Anzeigenamen kommen aus den Uebersetzungen.
