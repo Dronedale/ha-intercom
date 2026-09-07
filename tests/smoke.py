@@ -1,6 +1,6 @@
-"""Rauchtest gegen eine lokale HA-Testinstanz (Port 8124): Onboarding, Konfigurationsdialog, Klingeln, Aufnahme, Medien, Upload.
+"""Smoke test against a local HA test instance (port 8124): onboarding, config flow, ringing, recording, media, upload.
 
-Aufruf: .venv/bin/python tests/smoke.py [--stream rtsp://...] [--no-record]
+Usage: .venv/bin/python tests/smoke.py [--stream rtsp://...] [--no-record]
 """
 
 from __future__ import annotations
@@ -56,7 +56,7 @@ def wait_ready(timeout: int = 480) -> None:
         except Exception:  # noqa: BLE001
             pass
         time.sleep(2)
-    raise SystemExit("HA-Testinstanz antwortet nicht")
+    raise SystemExit("HA test instance is not responding")
 
 
 def onboard() -> None:
@@ -77,9 +77,9 @@ def onboard() -> None:
         call("POST", "/api/onboarding/core_config", {})
         call("POST", "/api/onboarding/analytics", {})
         call("POST", "/api/onboarding/integration", {"client_id": CLIENT_ID, "redirect_uri": CLIENT_ID})
-        print("Onboarding erledigt, Token erhalten")
+        print("onboarding done, token received")
     else:
-        # Bereits eingerichtet: Token per Passwort-Login holen
+        # Already set up: get a token via password login
         status, res, _ = call("POST", "/auth/login_flow", {"client_id": CLIENT_ID, "handler": ["homeassistant", None], "redirect_uri": CLIENT_ID})
         assert status == 200, res
         status, res, _ = call("POST", f"/auth/login_flow/{res['flow_id']}", {"username": "test", "password": "test1234", "client_id": CLIENT_ID})
@@ -88,7 +88,7 @@ def onboard() -> None:
         status, tok, _ = call("POST", "/auth/token", form, {"Content-Type": "application/x-www-form-urlencoded"})
         assert status == 200, tok
         TOKEN = tok["access_token"]
-        print("Anmeldung erledigt, Token erhalten")
+        print("login done, token received")
 
 
 def set_state(entity_id: str, state: str) -> None:
@@ -100,13 +100,13 @@ def ensure_entry(stream: str) -> str:
     status, entries, _ = call("GET", "/api/config/config_entries/entry")
     for e in entries or []:
         if e["domain"] == "ha_intercom":
-            print("Konfigurationseintrag vorhanden:", e["entry_id"])
+            print("config entry exists:", e["entry_id"])
             return e["entry_id"]
     return run_flow(stream, str(MEDIA_BASE))
 
 
 def run_flow(stream: str, base_dir: str, alarm: str | None = None, lock: str | None = None, verbose: bool = False) -> str:
-    """Neuen Konfigurationsdialog durchlaufen: Voraussetzungen, Quellen, Sprechanlage, (Sensoren), Haus, Pruefung."""
+    """Run through the new config flow: prerequisites, sources, intercom, (sensors), house, check."""
 
     def step(payload: dict | None = None):
         if payload is None:
@@ -115,7 +115,7 @@ def run_flow(stream: str, base_dir: str, alarm: str | None = None, lock: str | N
             st, fl, _ = call("POST", f"/api/config/config_entries/flow/{fl_id[0]}", payload)
         assert st == 200, fl
         if verbose:
-            print(f"  Schritt {fl.get('step_id') or fl.get('type')}: {json.dumps(fl.get('description_placeholders') or fl.get('errors') or {}, ensure_ascii=False)}")
+            print(f"  step {fl.get('step_id') or fl.get('type')}: {json.dumps(fl.get('description_placeholders') or fl.get('errors') or {}, ensure_ascii=False)}")
         return fl
 
     fl_id = [None]
@@ -130,19 +130,19 @@ def run_flow(stream: str, base_dir: str, alarm: str | None = None, lock: str | N
     if flow.get("step_id") == "sensors":
         flow = step({"door_state_entity": "sensor.103_state", "tablet_state_entity": "sensor.102_state", "ami_connected_entity": "binary_sensor.ami_connected"})
     assert flow.get("step_id") == "house", flow
-    haus = {"base_dir": base_dir}
+    house = {"base_dir": base_dir}
     if alarm:
-        haus["alarm_entity"] = alarm
+        house["alarm_entity"] = alarm
     if lock:
-        haus["lock_entity"] = lock
-    flow = step(haus)
+        house["lock_entity"] = lock
+    flow = step(house)
     assert flow.get("step_id") == "check", flow
     flow = step({})
     if flow.get("type") != "create_entry" and (flow.get("errors") or {}).get("base") == "stream_failed":
-        print("  Stream nicht erreichbar, wird ignoriert")
+        print("  stream not reachable, ignoring")
         flow = step({"ignore_stream": True})
     assert flow.get("type") == "create_entry", flow
-    print("Konfigurationseintrag angelegt:", flow["result"]["entry_id"])
+    print("config entry created:", flow["result"]["entry_id"])
     return flow["result"]["entry_id"]
 
 
@@ -165,26 +165,26 @@ def main() -> int:
     time.sleep(3)
 
     ents = states()
-    print(f"\nEntitaeten ({len(ents)}):")
+    print(f"\nEntities ({len(ents)}):")
     for eid in sorted(ents):
         print(f"  {eid:55s} {ents[eid]['state']}")
-    fehlt = [d for d in ("switch.", "number.", "select.", "sensor.", "binary_sensor.", "event.") if not any(e.startswith(d) for e in ents)]
-    if fehlt:
-        print("FEHLER: Plattformen ohne Entitaeten:", fehlt)
+    missing = [d for d in ("switch.", "number.", "select.", "sensor.", "binary_sensor.", "event.") if not any(e.startswith(d) for e in ents)]
+    if missing:
+        print("ERROR: platforms without entities:", missing)
         return 1
 
-    # Einstellungen setzen (Dienste der Domaenen)
+    # Apply settings (via the domain services)
     mailbox = next(e for e in ents if e.startswith("switch.") and e.endswith("mailbox"))
     status, _, _ = call("POST", "/api/services/switch/turn_on", {"entity_id": mailbox})
     assert status == 200
-    klingeldauer = next(e for e in ents if e.startswith("number.") and "ring_duration" in e)
-    status, _, _ = call("POST", "/api/services/number/set_value", {"entity_id": klingeldauer, "value": 15})
+    ring_duration = next(e for e in ents if e.startswith("number.") and "ring_duration" in e)
+    status, _, _ = call("POST", "/api/services/number/set_value", {"entity_id": ring_duration, "value": 15})
     assert status == 200
     time.sleep(1)
-    print("Mailbox an, Klingeldauer 15:", states()[mailbox]["state"], states()[klingeldauer]["state"])
+    print("mailbox on, ring duration 15:", states()[mailbox]["state"], states()[ring_duration]["state"])
 
     if not args.no_record:
-        print("\nKlingeln simulieren, 12 s aufnehmen, Anruf beenden ...")
+        print("\nSimulating a ring, recording for 12 s, ending the call ...")
         set_state("sensor.vto_tuerklingel", "Doorbell Ring")
         set_state("sensor.103_state", "Ringing")
         time.sleep(1)
@@ -192,35 +192,35 @@ def main() -> int:
         time.sleep(6)
         set_state("sensor.102_state", "In use")
         time.sleep(6)
-        aufnahme = next(e for e in states() if e.startswith("binary_sensor.") and e.endswith("recording"))
-        print("Aufnahme laeuft:", states()[aufnahme]["state"])
+        recording_entity = next(e for e in states() if e.startswith("binary_sensor.") and e.endswith("recording"))
+        print("recording active:", states()[recording_entity]["state"])
         set_state("sensor.103_state", "Not in use")
         set_state("sensor.102_state", "Not in use")
         time.sleep(6)
-        nachrichten = next(e for e in states() if e.startswith("sensor.") and e.endswith("_messages") and "new" not in e)
-        s = states()[nachrichten]
-        print("Nachrichten:", s["state"], json.dumps(s["attributes"].get("entries"), ensure_ascii=False)[:400])
-        eintraege = s["attributes"].get("entries") or []
-        if not eintraege:
-            print("FEHLER: kein Eintrag nach der Aufnahme")
+        messages = next(e for e in states() if e.startswith("sensor.") and e.endswith("_messages") and "new" not in e)
+        s = states()[messages]
+        print("messages:", s["state"], json.dumps(s["attributes"].get("entries"), ensure_ascii=False)[:400])
+        records = s["attributes"].get("entries") or []
+        if not records:
+            print("ERROR: no entry after the recording")
             return 1
-        k = eintraege[0]["id"]
+        k = records[0]["id"]
         status, data, hdrs = call("GET", f"/api/ha_intercom/media/clip/{k}", raw=True, headers={"Range": "bytes=0-99"})
-        print(f"Clip-Abruf mit Range: HTTP {status}, {len(data)} Byte, Content-Range {hdrs.get('Content-Range')}")
+        print(f"clip fetch with Range: HTTP {status}, {len(data)} bytes, Content-Range {hdrs.get('Content-Range')}")
         status, data, hdrs = call("GET", f"/api/ha_intercom/media/image/{k}", raw=True)
-        print(f"Bild-Abruf: HTTP {status}, {len(data)} Byte, {hdrs.get('Content-Type')}")
+        print(f"image fetch: HTTP {status}, {len(data)} bytes, {hdrs.get('Content-Type')}")
         status, _, _ = call("POST", "/api/services/ha_intercom/mark_message_seen", {"id": k})
         time.sleep(1)
-        print("gesehen markiert:", states()[nachrichten]["attributes"]["entries"][0]["seen"])
+        print("marked seen:", states()[messages]["attributes"]["entries"][0]["seen"])
 
-    # Ansage-Upload: kurze Testdatei mit ffmpeg erzeugen
+    # Announcement upload: create a short test file with ffmpeg
     import subprocess, tempfile  # noqa: E402
 
     tmp = Path(tempfile.mkdtemp()) / "test.mp3"
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=440:duration=2", "-c:a", "libmp3lame", str(tmp)], check=True)
     boundary = "----intercomtest"
     body = (
-        f"--{boundary}\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\nTestansage\r\n"
+        f"--{boundary}\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\nTest announcement\r\n"
         f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"test.mp3\"\r\nContent-Type: audio/mpeg\r\n\r\n"
     ).encode() + tmp.read_bytes() + f"\r\n--{boundary}--\r\n".encode()
     status, res, _ = call("POST", "/api/ha_intercom/announcement/upload", body, {"Content-Type": f"multipart/form-data; boundary={boundary}"})
@@ -228,18 +228,18 @@ def main() -> int:
     if status != 200:
         return 1
     time.sleep(1)
-    ansagen = next(e for e in states() if e.startswith("sensor.") and e.endswith("_announcements"))
-    print("Ansagen:", states()[ansagen]["state"], json.dumps(states()[ansagen]["attributes"].get("list"), ensure_ascii=False)[:300])
-    status, _, _ = call("POST", "/api/services/ha_intercom/activate_announcement", {"name": "Testansage"})
+    announcements = next(e for e in states() if e.startswith("sensor.") and e.endswith("_announcements"))
+    print("announcements:", states()[announcements]["state"], json.dumps(states()[announcements]["attributes"].get("list"), ensure_ascii=False)[:300])
+    status, _, _ = call("POST", "/api/services/ha_intercom/activate_announcement", {"name": "Test announcement"})
     time.sleep(1)
     sel = next(e for e in states() if e.startswith("select.") and e.endswith("_active_announcement"))
-    print("Aktive Ansage:", states()[sel]["state"])
+    print("active announcement:", states()[sel]["state"])
     status, data, hdrs = call("GET", f"/api/ha_intercom/media/announcement/{res['announcement']['file']}", raw=True)
-    print(f"Ansage-Abruf: HTTP {status}, {len(data)} Byte, {hdrs.get('Content-Type')}")
-    status, _, _ = call("POST", "/api/services/ha_intercom/rename_announcement", {"name": "Testansage", "new_name": "Urlaub"})
+    print(f"announcement fetch: HTTP {status}, {len(data)} bytes, {hdrs.get('Content-Type')}")
+    status, _, _ = call("POST", "/api/services/ha_intercom/rename_announcement", {"name": "Test announcement", "new_name": "Vacation"})
     time.sleep(1)
-    print("Nach Umbenennen:", states()[sel]["state"])
-    print("\nRAUCHTEST OK")
+    print("after rename:", states()[sel]["state"])
+    print("\nSMOKE TEST OK")
     return 0
 
 

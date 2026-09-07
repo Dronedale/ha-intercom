@@ -1,4 +1,4 @@
-"""Umgebung erkennen und Voraussetzungen pruefen, fuer den Konfigurationsdialog und die Karte."""
+"""Detect the environment and check requirements, for the config flow and the card."""
 
 from __future__ import annotations
 
@@ -33,8 +33,8 @@ _STATE_ID = re.compile(r"^sensor\.([0-9]+)_state$")
 
 
 @dataclass
-class Umgebung:
-    """Was auf diesem Home Assistant gefunden wurde."""
+class Environment:
+    """What was found on this Home Assistant."""
 
     supervisor: bool = False
     addons: list[tuple[str, str]] = field(default_factory=list)
@@ -66,7 +66,7 @@ def sorted_extensions(values: Any) -> list[str]:
 def _is_hassio(hass: HomeAssistant) -> bool:
     try:
         from homeassistant.helpers.hassio import is_hassio
-    except ImportError:  # pragma: no cover - aeltere Versionen
+    except ImportError:  # pragma: no cover - older versions
         try:
             from homeassistant.components.hassio import is_hassio  # type: ignore[no-redef]
         except ImportError:
@@ -78,7 +78,7 @@ def _is_hassio(hass: HomeAssistant) -> bool:
 
 
 def _asterisk_addons(hass: HomeAssistant) -> list[tuple[str, str]]:
-    """Installierte Apps, deren Slug oder Name Asterisk enthaelt, als (slug, name)."""
+    """Installed add-ons whose slug or name contains Asterisk, as (slug, name)."""
     try:
         from homeassistant.components.hassio import get_addons_info, get_supervisor_info
     except ImportError:
@@ -90,7 +90,7 @@ def _asterisk_addons(hass: HomeAssistant) -> list[tuple[str, str]]:
         addons = get_addons_info(hass) or {}
         candidates.extend(a for a in addons.values() if isinstance(a, dict))
     except Exception as err:  # noqa: BLE001
-        _LOGGER.debug("Supervisor-Auskunft nicht lesbar: %s", err)
+        _LOGGER.debug("Supervisor info not readable: %s", err)
         return []
     found: dict[str, str] = {}
     for addon in candidates:
@@ -102,7 +102,7 @@ def _asterisk_addons(hass: HomeAssistant) -> list[tuple[str, str]]:
 
 
 async def _sip_core(hass: HomeAssistant) -> tuple[bool, list[str], str | None]:
-    """sip-core vorhanden? Nebenstellen aus dessen Konfiguration; Nebenstelle ohne HA-Benutzer = Tuerstation."""
+    """Is sip-core present? Extensions from its configuration; an extension without an HA user = door station."""
     entries = hass.config_entries.async_entries(SIP_CORE_DOMAIN)
     if not entries:
         return False, [], None
@@ -117,7 +117,7 @@ async def _sip_core(hass: HomeAssistant) -> tuple[bool, list[str], str | None]:
                 if username:
                     known.add(str(username).lower())
     except Exception as err:  # noqa: BLE001
-        _LOGGER.debug("Benutzerliste nicht lesbar: %s", err)
+        _LOGGER.debug("User list not readable: %s", err)
     extensions: set[str] = set()
     strangers: list[str] = []
     for entry in entries:
@@ -149,7 +149,7 @@ def _registry_entity(hass: HomeAssistant, domain: str, suffix: str) -> str | Non
 
 @callback
 def state_entity(hass: HomeAssistant, ext: str) -> str | None:
-    """Zustandssensor einer Nebenstelle (Asterisk-Integration)."""
+    """State sensor of an extension (Asterisk integration)."""
     found = _registry_entity(hass, "sensor", f"{ext}_state")
     if found:
         return found
@@ -176,7 +176,7 @@ def ami_entity(hass: HomeAssistant) -> str | None:
 
 @callback
 def asterisk_extensions(hass: HomeAssistant) -> list[str]:
-    """Nebenstellen, fuer die die Asterisk-Integration einen Zustandssensor fuehrt."""
+    """Extensions for which the Asterisk integration provides a state sensor."""
     found: set[str] = set()
     registry = er.async_get(hass)
     for entry in registry.entities.values():
@@ -197,7 +197,7 @@ def asterisk_extensions(hass: HomeAssistant) -> list[str]:
 
 @callback
 def asterisk_endpoints(hass: HomeAssistant) -> list[dict[str, Any]]:
-    """Nebenstellen mit vorhandenem Zustandssensor; Name = vom Benutzer vergebener Geraetename, sonst leer."""
+    """Extensions with an existing state sensor; name = device name assigned by the user, otherwise empty."""
     registry = er.async_get(hass)
     devices = dr.async_get(hass)
     found: dict[str, dict[str, Any]] = {}
@@ -232,9 +232,9 @@ def asterisk_endpoints(hass: HomeAssistant) -> list[dict[str, Any]]:
     return [found[ext] for ext in sorted_extensions(found)]
 
 
-async def async_discover(hass: HomeAssistant) -> Umgebung:
-    """Alles einsammeln, was der Dialog vorbelegen oder pruefen kann."""
-    env = Umgebung()
+async def async_discover(hass: HomeAssistant) -> Environment:
+    """Collect everything the flow can prefill or check."""
+    env = Environment()
     env.supervisor = _is_hassio(hass)
     env.addons = _asterisk_addons(hass) if env.supervisor else []
     env.asterisk_service = hass.services.has_service(ASTERISK_DOMAIN, ASTERISK_SERVICE)
@@ -245,7 +245,7 @@ async def async_discover(hass: HomeAssistant) -> Umgebung:
     return env
 
 
-# ------------------------------------------------------------------ Pruefungen
+# ------------------------------------------------------------------ Checks
 
 
 async def async_check_ffmpeg(hass: HomeAssistant) -> tuple[bool, str]:
@@ -256,9 +256,9 @@ async def async_check_ffmpeg(hass: HomeAssistant) -> tuple[bool, str]:
 
 
 async def async_check_stream(url: str) -> tuple[bool, str]:
-    """Stream kurz mit ffprobe abfragen; liefert die gefundenen Spuren."""
+    """Briefly query the stream with ffprobe; returns the streams found."""
     if not url:
-        return False, "leer"
+        return False, "empty"
     cmd = [FFPROBE, "-v", "error"]
     if url.lower().startswith("rtsp"):
         cmd += ["-rtsp_transport", "tcp"]
@@ -274,10 +274,10 @@ async def async_check_stream(url: str) -> tuple[bool, str]:
     except asyncio.TimeoutError:
         proc.kill()
         await proc.wait()
-        return False, f"keine Antwort in {CHECK_TIMEOUT} s"
+        return False, f"no response within {CHECK_TIMEOUT} s"
     if proc.returncode != 0:
         lines = [line.strip() for line in err.decode(errors="replace").splitlines() if line.strip()]
-        return False, (lines[-1] if lines else f"ffprobe Rückgabe {proc.returncode}")[:160]
+        return False, (lines[-1] if lines else f"ffprobe exit code {proc.returncode}")[:160]
     parts: list[str] = []
     try:
         for stream in json.loads(out.decode(errors="replace") or "{}").get("streams") or []:
@@ -287,14 +287,14 @@ async def async_check_stream(url: str) -> tuple[bool, str]:
                 parts.append(f"{stream.get('codec_name')} {stream.get('sample_rate')} Hz")
     except ValueError:
         pass
-    return True, ", ".join(parts) or "erreichbar"
+    return True, ", ".join(parts) or "reachable"
 
 
 async def async_check_dir(hass: HomeAssistant, base: str) -> tuple[bool, str]:
     def _probe() -> str:
         path = Path(base).expanduser()
         path.mkdir(parents=True, exist_ok=True)
-        test = path / ".schreibtest"
+        test = path / ".writetest"
         test.write_text("ok", encoding="utf-8")
         test.unlink()
         return str(path)

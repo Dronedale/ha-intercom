@@ -1,4 +1,4 @@
-"""Schalter: Mailbox und Sprachansage."""
+"""Switches: mailbox and voice announcement."""
 
 from __future__ import annotations
 
@@ -10,12 +10,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import IntercomConfigEntry
-from .const import SETTING_MAILBOX, SETTING_SPRACHANSAGE
+from .const import SETTING_MAILBOX, SETTING_VOICE_ANNOUNCEMENT
 from .entity import IntercomEntity
 
 SWITCHES: list[tuple[str, str]] = [
     (SETTING_MAILBOX, "mdi:voicemail"),
-    (SETTING_SPRACHANSAGE, "mdi:account-voice"),
+    (SETTING_VOICE_ANNOUNCEMENT, "mdi:account-voice"),
 ]
 
 
@@ -27,7 +27,7 @@ async def async_setup_entry(
 
 
 class IntercomSwitch(IntercomEntity, SwitchEntity, RestoreEntity):
-    """Ein Ein/Aus-Wert des Managers, Zustand wird nach Neustart wiederhergestellt."""
+    """An on/off value of the manager; state is restored after a restart."""
 
     def __init__(self, manager, key: str, icon: str) -> None:
         super().__init__(manager, key)

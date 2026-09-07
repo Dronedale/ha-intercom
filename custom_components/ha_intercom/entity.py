@@ -1,4 +1,4 @@
-"""Gemeinsame Basis der Intercom-Entitaeten."""
+"""Common base of the Intercom entities."""
 
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ from .manager import IntercomManager
 
 VERSION = "0.2.0"
 
-# Englische Namen fuer die Objekt-IDs, damit die Entitaets-IDs in jeder Sprache gleich lauten
-# (z. B. number.intercom_ring_duration). Die Anzeigenamen kommen aus den Uebersetzungen.
+# English names for the object IDs so that the entity IDs read the same in every language
+# (e.g. number.intercom_ring_duration). The display names come from the translations.
 OBJECT_ID_NAMES = {
     "mailbox": "Mailbox",
     "voice_announcement": "Voice announcement",
@@ -34,7 +34,7 @@ OBJECT_ID_NAMES = {
 
 
 class IntercomEntity(Entity):
-    """Basisklasse: Geraetezuordnung, eindeutige ID, Aktualisierung ueber den Manager."""
+    """Base class: device assignment, unique ID, updates via the manager."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -48,13 +48,13 @@ class IntercomEntity(Entity):
             identifiers={(DOMAIN, manager.entry.entry_id)},
             name="Intercom",
             manufacturer="ha-intercom",
-            model="Türsprechanlage",
+            model="Door intercom",
             sw_version=VERSION,
         )
 
     @property
     def suggested_object_id(self) -> str | None:
-        """Objekt-ID aus dem englischen Namen, unabhaengig von der Sprache der Instanz."""
+        """Object ID derived from the English name, independent of the instance language."""
         return OBJECT_ID_NAMES.get(self._key) or super().suggested_object_id
 
     async def async_added_to_hass(self) -> None:

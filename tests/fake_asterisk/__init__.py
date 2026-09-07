@@ -1,6 +1,6 @@
-"""Testhilfe: stellt den Dienst asterisk.send_action bereit, damit der Intercom-Dialog lokal durchlaeuft.
+"""Test helper: provides the asterisk.send_action service so the intercom config flow runs through locally.
 
-Nur fuer die lokale Testinstanz (.test/config/custom_components), nicht Teil der Integration.
+Only for the local test instance (.test/config/custom_components), not part of the integration.
 """
 
 from __future__ import annotations

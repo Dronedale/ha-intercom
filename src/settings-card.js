@@ -1,4 +1,4 @@
-/* Einstellungskarte: Klingeln, Anrufbeantworter, weitere Gruppen aus der Konfiguration, Status. */
+/* Settings card: ringing, answering machine, further groups from the configuration, status. */
 
 import { LitElement, html, css, nothing } from "lit";
 import { tokens, controls } from "./styles.js";
@@ -154,19 +154,19 @@ export class IntercomSettingsCard extends LitElement {
       groups.push({
         name: t("g_ring"),
         rows: [
-          { entity: ents.ring_duration, name: t("s_klingeldauer"), description: t("s_klingeldauer_d") },
-          { entity: ents.ringback, name: t("s_freizeichen"), description: t("s_freizeichen_d") },
-          { entity: ents.ringtone, name: t("s_klingelton"), description: t("s_klingelton_d") },
+          { entity: ents.ring_duration, name: t("s_ring_duration"), description: t("s_ring_duration_d") },
+          { entity: ents.ringback, name: t("s_ringback"), description: t("s_ringback_d") },
+          { entity: ents.ringtone, name: t("s_ringtone"), description: t("s_ringtone_d") },
         ],
       });
       groups.push({
         name: t("g_answering"),
         rows: [
           { entity: ents.mailbox, name: t("s_mailbox"), description: t("s_mailbox_d") },
-          { entity: ents.voice_announcement, name: t("s_sprachansage"), description: t("s_sprachansage_d") },
-          { entity: ents.announcement, name: t("s_ansage"), description: t("s_ansage_d") },
-          { entity: ents.talk_time, name: t("s_sprechzeit"), description: t("s_sprechzeit_d") },
-          { entity: ents.retention, name: t("s_aufbewahrung"), description: t("s_aufbewahrung_d") },
+          { entity: ents.voice_announcement, name: t("s_voice_announcement"), description: t("s_voice_announcement_d") },
+          { entity: ents.announcement, name: t("s_announcement"), description: t("s_announcement_d") },
+          { entity: ents.talk_time, name: t("s_talk_time"), description: t("s_talk_time_d") },
+          { entity: ents.retention, name: t("s_retention"), description: t("s_retention_d") },
         ],
       });
     }
@@ -184,7 +184,7 @@ export class IntercomSettingsCard extends LitElement {
     try {
       if (this.hass && typeof this.hass.formatEntityState === "function") return this.hass.formatEntityState(st, v);
     } catch (e) {
-      /* Rueckfall auf den Rohwert */
+      /* fall back to the raw value */
     }
     return v;
   }
@@ -341,7 +341,7 @@ export class IntercomSettingsCard extends LitElement {
 
 customElements.define("intercom-settings-card", IntercomSettingsCard);
 
-/* Popup-Huelle: abgedunkelter Hintergrund, Einstellungskarte in der Mitte. */
+/* Popup shell: dimmed background, settings card in the centre. */
 export class IntercomPopup extends LitElement {
   static properties = { hass: { attribute: false }, config: { attribute: false } };
 

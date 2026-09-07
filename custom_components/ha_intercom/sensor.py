@@ -1,4 +1,4 @@
-"""Sensoren: Nachrichten, neue Nachrichten, Ansagen, Freizeichen-Dateien, letztes Klingeln."""
+"""Sensors: messages, new messages, announcements, ringback files, last ring."""
 
 from __future__ import annotations
 
@@ -21,17 +21,17 @@ async def async_setup_entry(
     manager = entry.runtime_data
     async_add_entities(
         [
-            NachrichtenSensor(manager),
-            NeueNachrichtenSensor(manager),
-            AnsagenSensor(manager),
-            FreizeichenSensor(manager),
-            LetztesKlingelnSensor(manager),
+            MessagesSensor(manager),
+            NewMessagesSensor(manager),
+            AnnouncementsSensor(manager),
+            RingbackFilesSensor(manager),
+            LastRingSensor(manager),
         ]
     )
 
 
-class NachrichtenSensor(IntercomEntity, SensorEntity):
-    """Anzahl der Mailbox-Eintraege; die Liste liegt in den Attributen fuer die Karte."""
+class MessagesSensor(IntercomEntity, SensorEntity):
+    """Number of mailbox entries; the list is in the attributes for the card."""
 
     _attr_icon = "mdi:voicemail"
 
@@ -40,19 +40,19 @@ class NachrichtenSensor(IntercomEntity, SensorEntity):
 
     @property
     def native_value(self) -> int:
-        return len(self.manager.nachrichten)
+        return len(self.manager.messages)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         return {
-            "new": self.manager.neue_nachrichten,
-            "entries": self.manager.nachrichten_attr(),
+            "new": self.manager.new_messages,
+            "entries": self.manager.messages_attr(),
             "recording": self.manager.recording,
         }
 
 
-class NeueNachrichtenSensor(IntercomEntity, SensorEntity):
-    """Anzahl ungesehener Eintraege."""
+class NewMessagesSensor(IntercomEntity, SensorEntity):
+    """Number of unseen entries."""
 
     _attr_icon = "mdi:message-badge"
 
@@ -61,11 +61,11 @@ class NeueNachrichtenSensor(IntercomEntity, SensorEntity):
 
     @property
     def native_value(self) -> int:
-        return self.manager.neue_nachrichten
+        return self.manager.new_messages
 
 
-class AnsagenSensor(IntercomEntity, SensorEntity):
-    """Anzahl der Ansagen; Liste und aktive Ansage in den Attributen."""
+class AnnouncementsSensor(IntercomEntity, SensorEntity):
+    """Number of announcements; list and active announcement in the attributes."""
 
     _attr_icon = "mdi:account-voice"
 
@@ -74,15 +74,15 @@ class AnsagenSensor(IntercomEntity, SensorEntity):
 
     @property
     def native_value(self) -> int:
-        return len(self.manager.ansagen)
+        return len(self.manager.announcements)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return {"active": self.manager.ansage_current, "list": self.manager.ansagen_attr()}
+        return {"active": self.manager.announcement_current, "list": self.manager.announcements_attr()}
 
 
-class FreizeichenSensor(IntercomEntity, SensorEntity):
-    """Anzahl der Freizeichen-Dateien; Liste und aktives Freizeichen in den Attributen."""
+class RingbackFilesSensor(IntercomEntity, SensorEntity):
+    """Number of ringback files; list and active ringback tone in the attributes."""
 
     _attr_icon = "mdi:music-box-multiple"
 
@@ -91,15 +91,15 @@ class FreizeichenSensor(IntercomEntity, SensorEntity):
 
     @property
     def native_value(self) -> int:
-        return len(self.manager.freizeichen)
+        return len(self.manager.ringback)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return {"active": self.manager.freizeichen_current, "list": self.manager.freizeichen_attr()}
+        return {"active": self.manager.ringback_current, "list": self.manager.ringback_attr()}
 
 
-class LetztesKlingelnSensor(IntercomEntity, SensorEntity, RestoreEntity):
-    """Zeitpunkt des letzten Klingelns; ueberlebt Neustarts ueber den gespeicherten Zustand."""
+class LastRingSensor(IntercomEntity, SensorEntity, RestoreEntity):
+    """Time of the last ring; survives restarts via the stored state."""
 
     _attr_icon = "mdi:bell-ring-outline"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
@@ -109,14 +109,14 @@ class LetztesKlingelnSensor(IntercomEntity, SensorEntity, RestoreEntity):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        if self.manager.letztes_klingeln:
+        if self.manager.last_ring:
             return
         last = await self.async_get_last_state()
         if last is not None and last.state not in (None, "unknown", "unavailable") and dt_util.parse_datetime(last.state):
-            self.manager.letztes_klingeln = last.state
+            self.manager.last_ring = last.state
 
     @property
     def native_value(self) -> datetime | None:
-        if not self.manager.letztes_klingeln:
+        if not self.manager.last_ring:
             return None
-        return dt_util.parse_datetime(self.manager.letztes_klingeln)
+        return dt_util.parse_datetime(self.manager.last_ring)

@@ -1,4 +1,4 @@
-"""Regler: Klingeldauer, Sprechzeit, Aufbewahrung."""
+"""Numbers: ring duration, talk time, retention."""
 
 from __future__ import annotations
 
@@ -7,14 +7,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IntercomConfigEntry
-from .const import SETTING_AUFBEWAHRUNG, SETTING_KLINGELDAUER, SETTING_SPRECHZEIT
+from .const import SETTING_RETENTION, SETTING_RING_DURATION, SETTING_TALK_TIME
 from .entity import IntercomEntity
 
-# key, Name, min, max, Schritt, Einheit, Icon
+# key, min, max, step, unit, icon
 NUMBERS: list[tuple[str, int, int, int, str, str]] = [
-    (SETTING_KLINGELDAUER, 5, 60, 1, "s", "mdi:timer-outline"),
-    (SETTING_SPRECHZEIT, 10, 60, 5, "s", "mdi:microphone-message"),
-    (SETTING_AUFBEWAHRUNG, 1, 365, 1, "d", "mdi:calendar-clock"),
+    (SETTING_RING_DURATION, 5, 60, 1, "s", "mdi:timer-outline"),
+    (SETTING_TALK_TIME, 10, 60, 5, "s", "mdi:microphone-message"),
+    (SETTING_RETENTION, 1, 365, 1, "d", "mdi:calendar-clock"),
 ]
 
 
@@ -26,7 +26,7 @@ async def async_setup_entry(
 
 
 class IntercomNumber(IntercomEntity, RestoreNumber):
-    """Ein Zahlenwert des Managers, Zustand wird nach Neustart wiederhergestellt."""
+    """A numeric value of the manager; state is restored after a restart."""
 
     _attr_mode = NumberMode.SLIDER
 

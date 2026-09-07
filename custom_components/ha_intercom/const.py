@@ -4,7 +4,7 @@ from __future__ import annotations
 
 DOMAIN = "ha_intercom"
 
-# --- Config entry data (Konfigurationsdialog) ---
+# --- Config entry data (config flow) ---
 CONF_TRIGGER_ENTITY = "trigger_entity"
 CONF_TRIGGER_STATE = "trigger_state"
 CONF_CAMERA_ENTITY = "camera_entity"
@@ -18,7 +18,7 @@ CONF_ADDON_SLUG = "addon_slug"
 CONF_BASE_DIR = "base_dir"
 CONF_ALARM_ENTITY = "alarm_entity"
 CONF_LOCK_ENTITY = "lock_entity"
-# nur im Konfigurationsdialog, wird nicht gespeichert
+# only used in the config flow, not stored
 CONF_IGNORE_STREAM = "ignore_stream"
 CONF_MOVE_FILES = "move_files"
 
@@ -39,37 +39,37 @@ DEFAULT_SNAPSHOT_DELAY = 0
 DEFAULT_IDLE_STATE = "Not in use"
 DEFAULT_IN_USE_STATE = "In use"
 
-# --- Ordner unterhalb des Basisordners ---
+# --- Folders below the base folder ---
 DIR_MAILBOX = "mailbox"
-DIR_ANSAGE = "announcements"
-DIR_FREIZEICHEN = "ringback"
-DIR_FREIZEICHEN_AKTIV = "active"
-DIR_KONVERTIERT = "converted"
-DIR_KLINGELTOENE = "ringtones"
+DIR_ANNOUNCEMENTS = "announcements"
+DIR_RINGBACK = "ringback"
+DIR_RINGBACK_ACTIVE = "active"
+DIR_CONVERTED = "converted"
+DIR_RINGTONES = "ringtones"
 
-# --- Einstellungen (Entitaeten) ---
+# --- Settings (entities) ---
 SETTING_MAILBOX = "mailbox"
-SETTING_SPRACHANSAGE = "voice_announcement"
-SETTING_KLINGELDAUER = "ring_duration"
-SETTING_SPRECHZEIT = "talk_time"
-SETTING_AUFBEWAHRUNG = "retention"
-SETTING_FREIZEICHEN = "ringback"
-SETTING_ANSAGE = "announcement"
-SETTING_KLINGELTON = "ringtone"
+SETTING_VOICE_ANNOUNCEMENT = "voice_announcement"
+SETTING_RING_DURATION = "ring_duration"
+SETTING_TALK_TIME = "talk_time"
+SETTING_RETENTION = "retention"
+SETTING_RINGBACK = "ringback"
+SETTING_ANNOUNCEMENT = "announcement"
+SETTING_RINGTONE = "ringtone"
 
 DEFAULT_SETTINGS = {
     SETTING_MAILBOX: True,
-    SETTING_SPRACHANSAGE: False,
-    SETTING_KLINGELDAUER: 20,
-    SETTING_SPRECHZEIT: 30,
-    SETTING_AUFBEWAHRUNG: 30,
-    SETTING_FREIZEICHEN: "default",
-    SETTING_ANSAGE: "",
-    SETTING_KLINGELTON: "",
+    SETTING_VOICE_ANNOUNCEMENT: False,
+    SETTING_RING_DURATION: 20,
+    SETTING_TALK_TIME: 30,
+    SETTING_RETENTION: 30,
+    SETTING_RINGBACK: "default",
+    SETTING_ANNOUNCEMENT: "",
+    SETTING_RINGTONE: "",
 }
 
-FREIZEICHEN_STANDARD = "default"
-ANSAGE_KEINE = "none"
+RINGBACK_DEFAULT = "default"
+ANNOUNCEMENT_NONE = "none"
 
 # --- Asterisk ---
 ASTDB_FAMILY = "intercom"
@@ -79,44 +79,44 @@ MOH_CLASS = "intercom"
 SIP_CORE_DOMAIN = "sip_core"
 CHECK_TIMEOUT = 8
 
-# --- Ereignisse ---
-# "ring" ist der von Home Assistant vorgegebene Ereignistyp fuer Tuerklingel-Entitaeten (device_class doorbell);
-# damit greifen die eingebauten Tuerklingel-Ausloeser. Die uebrigen Typen sind eigene.
-EVENT_KLINGELN = "ring"
-EVENT_ANGENOMMEN = "answered"
-EVENT_AUFGEZEICHNET = "recorded"
-EVENT_NACHRICHT = "message"
-EVENT_TYPES = [EVENT_KLINGELN, EVENT_ANGENOMMEN, EVENT_AUFGEZEICHNET, EVENT_NACHRICHT]
+# --- Events ---
+# "ring" is the event type Home Assistant prescribes for doorbell entities (device_class doorbell);
+# this makes the built-in doorbell triggers work. The remaining types are our own.
+EVENT_RING = "ring"
+EVENT_ANSWERED = "answered"
+EVENT_RECORDED = "recorded"
+EVENT_MESSAGE = "message"
+EVENT_TYPES = [EVENT_RING, EVENT_ANSWERED, EVENT_RECORDED, EVENT_MESSAGE]
 HA_EVENT_RING = f"{DOMAIN}_ring"
 HA_EVENT_RECORDED = f"{DOMAIN}_recorded"
 
-# --- Dienste ---
-SERVICE_NACHRICHT_LOESCHEN = "delete_message"
-SERVICE_NACHRICHT_GESEHEN = "mark_message_seen"
-SERVICE_ALLE_GESEHEN = "mark_all_seen"
-SERVICE_ANSAGE_AKTIVIEREN = "activate_announcement"
-SERVICE_ANSAGE_LOESCHEN = "delete_announcement"
-SERVICE_ANSAGE_UMBENENNEN = "rename_announcement"
-SERVICE_AUFNAHME_STARTEN = "start_recording"
-SERVICE_AUFNAHME_STOPPEN = "stop_recording"
-SERVICE_INDEX_NEU = "rescan"
+# --- Services ---
+SERVICE_DELETE_MESSAGE = "delete_message"
+SERVICE_MARK_MESSAGE_SEEN = "mark_message_seen"
+SERVICE_MARK_ALL_SEEN = "mark_all_seen"
+SERVICE_ACTIVATE_ANNOUNCEMENT = "activate_announcement"
+SERVICE_DELETE_ANNOUNCEMENT = "delete_announcement"
+SERVICE_RENAME_ANNOUNCEMENT = "rename_announcement"
+SERVICE_START_RECORDING = "start_recording"
+SERVICE_STOP_RECORDING = "stop_recording"
+SERVICE_RESCAN = "rescan"
 SERVICE_ASTERISK_SYNC = "asterisk_sync"
 
-ATTR_KENNUNG = "id"
+ATTR_ID = "id"
 ATTR_NAME = "name"
-ATTR_NEUER_NAME = "new_name"
+ATTR_NEW_NAME = "new_name"
 
 # --- HTTP ---
 URL_MEDIA = "/api/ha_intercom/media/{kind}/{name}"
 URL_UPLOAD = "/api/ha_intercom/announcement/upload"
 MEDIA_KIND_CLIP = "clip"
-MEDIA_KIND_BILD = "image"
-MEDIA_KIND_ANSAGE = "announcement"
-MEDIA_KIND_FREIZEICHEN = "ringback"
-MEDIA_KINDS = (MEDIA_KIND_CLIP, MEDIA_KIND_BILD, MEDIA_KIND_ANSAGE, MEDIA_KIND_FREIZEICHEN)
+MEDIA_KIND_IMAGE = "image"
+MEDIA_KIND_ANNOUNCEMENT = "announcement"
+MEDIA_KIND_RINGBACK = "ringback"
+MEDIA_KINDS = (MEDIA_KIND_CLIP, MEDIA_KIND_IMAGE, MEDIA_KIND_ANNOUNCEMENT, MEDIA_KIND_RINGBACK)
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 
-# --- Sonstiges ---
+# --- Miscellaneous ---
 FFMPEG = "ffmpeg"
 FFPROBE = "ffprobe"
 SCAN_INTERVAL_SECONDS = 60

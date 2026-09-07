@@ -2,92 +2,92 @@
   "config": {
     "step": {
       "user": {
-        "title": "Voraussetzungen",
-        "description": "Auf diesem Home Assistant gefunden:\n\nAsterisk-App (Add-on): {app}\n\nAsterisk-Integration: {asterisk}\n\nsip-core (Nebenstellen): {sip}\n\nDie Asterisk-App und die Asterisk-Integration sind Voraussetzung. Ohne sip-core funktioniert die Karte, nur nicht der Anrufteil. Weiter richtet Quellen, Sprechanlage und Haus ein und prüft am Ende ffmpeg, Stream und Ordner."
+        "title": "Prerequisites",
+        "description": "Found on this Home Assistant:\n\nAsterisk add-on: {app}\n\nAsterisk integration: {asterisk}\n\nsip-core (extensions): {sip}\n\nThe Asterisk add-on and the Asterisk integration are required. Without sip-core the card works, only the call section is unavailable. Next sets up sources, intercom and house, and finally checks ffmpeg, stream and folder."
       },
       "sip": {
-        "title": "Sprechanlage",
-        "description": "Nebenstellen der Türstation und des Tablets. Die Liste stammt aus sip-core und der Asterisk-Integration, eigene Werte sind möglich. Die Zustandssensoren werden daraus abgeleitet.",
+        "title": "Intercom",
+        "description": "Extensions of the door station and the tablet. The list comes from sip-core and the Asterisk integration; custom values are allowed. The state sensors are derived from them.",
         "data": {
-          "ext_door": "Nebenstelle Türstation",
-          "ext_tablet": "Nebenstelle Tablet",
-          "addon_slug": "Asterisk-App (für moh reload)"
+          "ext_door": "Door station extension",
+          "ext_tablet": "Tablet extension",
+          "addon_slug": "Asterisk add-on (for moh reload)"
         }
       },
       "sources": {
-        "title": "Quellen",
-        "description": "Woran erkennt die Integration ein Klingeln, und woher kommen Standbild und Stream für die Aufnahme?",
+        "title": "Sources",
+        "description": "How does the integration detect a ring, and where do the snapshot and the recording stream come from?",
         "data": {
-          "trigger_entity": "Klingel-Auslöser (Entität)",
-          "trigger_state": "Zustand, der ein Klingeln bedeutet",
-          "camera_entity": "Kamera für das Standbild",
-          "stream_url": "RTSP-Stream für die Aufnahme (go2rtc)"
+          "trigger_entity": "Ring trigger (entity)",
+          "trigger_state": "State that means ringing",
+          "camera_entity": "Camera for the snapshot",
+          "stream_url": "RTSP stream for recording (go2rtc)"
         }
       },
       "sensors": {
-        "title": "Zustandssensoren",
-        "description": "Diese Sensoren der Asterisk-Integration wurden für die Nebenstellen {ext_door} und {ext_tablet} nicht automatisch gefunden. Bitte auswählen oder leer lassen; ohne Zustandssensor der Türstation endet die Aufnahme erst nach der Höchstdauer.",
+        "title": "State sensors",
+        "description": "These sensors of the Asterisk integration were not found automatically for extensions {ext_door} and {ext_tablet}. Select them or leave them empty; without the door station state sensor a recording only stops after the maximum length.",
         "data": {
-          "door_state_entity": "Zustandssensor Türstation",
-          "tablet_state_entity": "Zustandssensor Tablet",
-          "ami_connected_entity": "Sensor AMI verbunden"
+          "door_state_entity": "Door station state sensor",
+          "tablet_state_entity": "Tablet state sensor",
+          "ami_connected_entity": "AMI connected sensor"
         }
       },
       "house": {
-        "title": "Haus",
-        "description": "Alarmzentrale und Türschloss erscheinen in der Karte, beides ist optional und lässt sich später in den Optionen ändern. Unter dem Basisordner entstehen mailbox, ansage und freizeichen.",
+        "title": "House",
+        "description": "Alarm panel and door lock appear in the card; both are optional and can be changed later in the options. mailbox, ansage and freizeichen are created below the base folder.",
         "data": {
-          "alarm_entity": "Alarmzentrale",
-          "lock_entity": "Türschloss",
-          "base_dir": "Basisordner"
+          "alarm_entity": "Alarm panel",
+          "lock_entity": "Door lock",
+          "base_dir": "Base folder"
         }
       },
       "check": {
-        "title": "Prüfung",
-        "description": "ffmpeg: {ffmpeg}\n\nStream: {stream}\n\nBasisordner: {ordner}\n\nAMI verbunden: {ami}\n\nAsterisk-App: {app}\n\nsip-core: {sip}\n\nAbsenden legt die Integration an. Wählplan und MOH-Klasse sind im README beschrieben.",
+        "title": "Check",
+        "description": "ffmpeg: {ffmpeg}\n\nStream: {stream}\n\nBase folder: {folder}\n\nAMI connected: {ami}\n\nAsterisk add-on: {app}\n\nsip-core: {sip}\n\nSubmit creates the integration. Dialplan and MOH class are described in the README.",
         "data": {
-          "ignore_stream": "Stream-Fehler ignorieren und trotzdem anlegen"
+          "ignore_stream": "Ignore the stream error and create anyway"
         }
       }
     },
     "error": {
-      "ffmpeg_missing": "ffmpeg oder ffprobe fehlt auf diesem System.",
-      "dir_failed": "Der Basisordner lässt sich nicht anlegen oder beschreiben.",
-      "stream_failed": "Der Stream antwortet nicht. Adresse prüfen oder den Fehler bewusst ignorieren."
+      "ffmpeg_missing": "ffmpeg or ffprobe is missing on this system.",
+      "dir_failed": "The base folder cannot be created or written.",
+      "stream_failed": "The stream does not respond. Check the address or deliberately ignore the error."
     },
     "abort": {
-      "single_instance_allowed": "Es kann nur ein Intercom eingerichtet werden.",
-      "asterisk_missing": "Die Asterisk-Integration (Dienst asterisk.send_action) wurde nicht gefunden. Sie ist Voraussetzung, siehe README.",
-      "addon_missing": "Die Asterisk-App (Add-on) ist nicht installiert. Sie ist Voraussetzung, siehe README."
+      "single_instance_allowed": "Only one Intercom can be configured.",
+      "asterisk_missing": "The Asterisk integration (service asterisk.send_action) was not found. It is required, see README.",
+      "addon_missing": "The Asterisk add-on is not installed. It is required, see README."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Intercom Optionen",
+        "title": "Intercom options",
         "data": {
-          "stream_url": "RTSP-Stream für die Aufnahme",
-          "addon_slug": "Asterisk-App (für moh reload)",
-          "alarm_entity": "Alarmzentrale",
-          "lock_entity": "Türschloss",
-          "base_dir": "Basisordner",
-          "max_clip_seconds": "Höchstdauer eines Clips",
-          "snapshot_delay": "Verzögerung des Standbilds",
-          "idle_state": "Ruhezustand der Türstation",
-          "in_use_state": "Gesprächszustand des Tablets"
+          "stream_url": "RTSP stream for recording",
+          "addon_slug": "Asterisk add-on (for moh reload)",
+          "alarm_entity": "Alarm panel",
+          "lock_entity": "Door lock",
+          "base_dir": "Base folder",
+          "max_clip_seconds": "Maximum clip length",
+          "snapshot_delay": "Snapshot delay",
+          "idle_state": "Idle state of the door station",
+          "in_use_state": "In-call state of the tablet"
         },
         "description": ""
       },
       "move": {
-        "title": "Ordner wechseln",
-        "description": "Der Basisordner wechselt von {alt} nach {neu}. Im alten Ordner liegen {messages} Nachrichten, {announcements} Ansagen und {ringback} Freizeichen-Dateien. Mit dem Schalter werden sie in den neuen Ordner verschoben, gleichnamige Dateien im Ziel bleiben unangetastet. Danach lädt sich die Integration neu und liest die Ordner ein.",
+        "title": "Change folder",
+        "description": "The base folder changes from {old} to {new}. The old folder holds {messages} messages, {announcements} announcements and {ringback} ringback files. With the switch on they are moved to the new folder; files with the same name in the target are left untouched. Afterwards the integration reloads and reads the folders.",
         "data": {
-          "move_files": "Dateien in den neuen Ordner verschieben"
+          "move_files": "Move files to the new folder"
         }
       }
     },
     "error": {
-      "move_failed": "Verschieben fehlgeschlagen, der Basisordner wurde nicht geändert. Zielordner und Rechte prüfen."
+      "move_failed": "Moving failed, the base folder was not changed. Check the target folder and permissions."
     }
   },
   "entity": {

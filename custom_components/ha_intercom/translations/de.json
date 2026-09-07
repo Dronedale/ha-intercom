@@ -44,7 +44,7 @@
       },
       "check": {
         "title": "Prüfung",
-        "description": "ffmpeg: {ffmpeg}\n\nStream: {stream}\n\nBasisordner: {ordner}\n\nAMI verbunden: {ami}\n\nAsterisk-App: {app}\n\nsip-core: {sip}\n\nAbsenden legt die Integration an. Wählplan und MOH-Klasse sind im README beschrieben.",
+        "description": "ffmpeg: {ffmpeg}\n\nStream: {stream}\n\nBasisordner: {folder}\n\nAMI verbunden: {ami}\n\nAsterisk-App: {app}\n\nsip-core: {sip}\n\nAbsenden legt die Integration an. Wählplan und MOH-Klasse sind im README beschrieben.",
         "data": {
           "ignore_stream": "Stream-Fehler ignorieren und trotzdem anlegen"
         }
@@ -80,7 +80,7 @@
       },
       "move": {
         "title": "Ordner wechseln",
-        "description": "Der Basisordner wechselt von {alt} nach {neu}. Im alten Ordner liegen {messages} Nachrichten, {announcements} Ansagen und {ringback} Freizeichen-Dateien. Mit dem Schalter werden sie in den neuen Ordner verschoben, gleichnamige Dateien im Ziel bleiben unangetastet. Danach lädt sich die Integration neu und liest die Ordner ein.",
+        "description": "Der Basisordner wechselt von {old} nach {new}. Im alten Ordner liegen {messages} Nachrichten, {announcements} Ansagen und {ringback} Freizeichen-Dateien. Mit dem Schalter werden sie in den neuen Ordner verschoben, gleichnamige Dateien im Ziel bleiben unangetastet. Danach lädt sich die Integration neu und liest die Ordner ein.",
         "data": {
           "move_files": "Dateien in den neuen Ordner verschieben"
         }

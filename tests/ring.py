@@ -1,4 +1,4 @@
-"""Zustaende der Testinstanz setzen: python tests/ring.py entity=state [entity=state ...]"""
+"""Set states in the test instance: python tests/ring.py entity=state [entity=state ...]"""
 
 from __future__ import annotations
 

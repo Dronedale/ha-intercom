@@ -1,4 +1,4 @@
-"""Binaersensoren: Aufnahme laeuft, Tuerstation im Anruf."""
+"""Binary sensors: recording in progress, door station in call."""
 
 from __future__ import annotations
 
@@ -14,11 +14,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: IntercomConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     manager = entry.runtime_data
-    async_add_entities([AufnahmeSensor(manager), ImAnrufSensor(manager)])
+    async_add_entities([RecordingSensor(manager), InCallSensor(manager)])
 
 
-class AufnahmeSensor(IntercomEntity, BinarySensorEntity):
-    """An, solange ffmpeg einen Clip aufzeichnet."""
+class RecordingSensor(IntercomEntity, BinarySensorEntity):
+    """On while ffmpeg is recording a clip."""
 
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_icon = "mdi:record-rec"
@@ -31,8 +31,8 @@ class AufnahmeSensor(IntercomEntity, BinarySensorEntity):
         return self.manager.recording
 
 
-class ImAnrufSensor(IntercomEntity, BinarySensorEntity):
-    """An, solange die Tuerstation nicht im Ruhezustand ist (klingelt oder spricht)."""
+class InCallSensor(IntercomEntity, BinarySensorEntity):
+    """On while the door station is not idle (ringing or talking)."""
 
     _attr_icon = "mdi:phone-in-talk"
 
@@ -41,4 +41,4 @@ class ImAnrufSensor(IntercomEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        return self.manager.im_anruf
+        return self.manager.in_call

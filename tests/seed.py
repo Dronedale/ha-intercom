@@ -1,4 +1,4 @@
-"""Testinstanz mit Zustaenden versorgen (Asterisk-Sensoren nachbilden) und die Anmelde-URL ausgeben."""
+"""Seed the test instance with states (mimicking the Asterisk sensors) and print the login URL."""
 
 from __future__ import annotations
 

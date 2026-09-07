@@ -1,4 +1,4 @@
-/* Intercom-Karte: Livebild, Sprechanlage (Anruf, Kontakte, Waehlen), Tuer und Lautstaerke, Mailbox, Ansagen, Status. */
+/* Intercom card: live view, intercom (call, contacts, dial), door and volume, mailbox, announcements, status. */
 
 import { LitElement, html, css, nothing } from "lit";
 import { repeat } from "lit/directives/repeat.js";
@@ -191,7 +191,7 @@ export class IntercomCard extends LitElement {
         gap: var(--gap);
       }
 
-      /* Livebild */
+      /* Live view */
       .live {
         position: relative;
         width: var(--live-w);
@@ -288,7 +288,7 @@ export class IntercomCard extends LitElement {
         height: 18px;
       }
 
-      /* Karte neben dem Bild: Alarmanlage oder Status */
+      /* Card next to the live view: alarm panel or status */
       .side {
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
@@ -474,7 +474,7 @@ export class IntercomCard extends LitElement {
         font-size: 12px;
       }
 
-      /* Sprechanlage */
+      /* Intercom */
       .call {
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
@@ -929,7 +929,7 @@ export class IntercomCard extends LitElement {
         opacity: 0.45;
       }
 
-      /* Waehlfeld: passt sich der verfuegbaren Hoehe an, Breite folgt proportional */
+      /* Dial pad: adapts to the available height, width follows proportionally */
       .dial {
         container-type: size;
         height: 100%;
@@ -1179,7 +1179,7 @@ export class IntercomCard extends LitElement {
         font-size: 12px;
       }
 
-      /* Ansagen */
+      /* Announcements */
       .ann {
         display: grid;
         grid-template-columns: auto 1fr auto;
@@ -1328,7 +1328,7 @@ export class IntercomCard extends LitElement {
         font-size: 14px;
       }
 
-      /* Eine Spalte: Handy und schmale Fenster */
+      /* Single column: phones and narrow windows */
       @media (max-width: 899px) {
         .app.fill {
           height: auto;
@@ -1412,18 +1412,23 @@ export class IntercomCard extends LitElement {
       () => this._onSip(),
       (err) => {
         const raw = (err && err.message) || String(err);
-        const hints = {
-          "User Denied Media Access": "Mikrofon verweigert oder Seite nicht über https geöffnet",
-          "WebRTC Error": "WebRTC-Fehler, Mikrofon oder unsichere Verbindung (http)",
-          "Not Found": "Nebenstelle unbekannt",
-          "Connection Error": "keine Verbindung zu Asterisk",
-          "Request Timeout": "keine Antwort von Asterisk",
-          Unavailable: "Gegenstelle nicht erreichbar",
-          Busy: "besetzt",
-          Rejected: "abgewiesen",
-        };
-        const key = Object.keys(hints).find((k) => raw.startsWith(k));
-        this._sipError = key ? `${hints[key]} · ${raw}` : raw;
+        // sip-core failure causes (and SipLink's own messages) mapped to translatable hints, resolved at render time
+        const hints = [
+          ["User Denied Media Access", "err_media"],
+          ["WebRTC Error", "err_webrtc"],
+          ["Not Found", "err_not_found"],
+          ["Connection Error", "err_connection"],
+          ["Request Timeout", "err_timeout"],
+          ["Unavailable", "err_unavailable"],
+          ["Busy", "err_busy"],
+          ["Rejected", "err_rejected"],
+          ["incoming call ended immediately", "err_ended"],
+          ["call ended immediately", "err_ended"],
+          ["startCall missing", "err_no_sipcore"],
+          ["sipCore missing", "err_no_sipcore"],
+        ];
+        const hit = hints.find(([k]) => raw.startsWith(k));
+        this._sipError = { key: hit ? hit[1] : null, raw };
         window.clearTimeout(this._sipErrorTimer);
         this._sipErrorTimer = window.setTimeout(() => {
           this._sipError = null;
@@ -1505,7 +1510,7 @@ export class IntercomCard extends LitElement {
     window.setTimeout(() => this._measureTop(), 2000);
   }
 
-  /* Abstand der Karte zum oberen Fensterrand messen; daraus ergibt sich die Hoehe ohne Seitenscrollen */
+  /* Measure the card's distance from the top of the window; this yields the height without page scrolling */
   _measureTop() {
     if (!this.isConnected) return;
     const top = Math.max(0, Math.round(this.getBoundingClientRect().top + (window.scrollY || 0)));
@@ -1588,7 +1593,7 @@ export class IntercomCard extends LitElement {
     this._syncFullscreen();
   }
 
-  /* ---------- Entitaeten der Integration ---------- */
+  /* ---------- Integration entities ---------- */
 
   _ent(key) {
     return this._info && this._info.entities ? this._info.entities[key] : undefined;
@@ -1604,7 +1609,7 @@ export class IntercomCard extends LitElement {
     try {
       if (this.hass && typeof this.hass.formatEntityState === "function") return this.hass.formatEntityState(st, v);
     } catch (e) {
-      /* Rueckfall auf den Rohwert */
+      /* fall back to the raw value */
     }
     return v;
   }
@@ -1620,7 +1625,7 @@ export class IntercomCard extends LitElement {
     return (t || this.t)("title");
   }
 
-  /* ---------- Klingeln, SIP, Vollbild ---------- */
+  /* ---------- Ringing, SIP, fullscreen ---------- */
 
   _isDoor(ext) {
     return !!ext && !!this._info && String(ext) === String(this._info.ext_door);
@@ -1799,7 +1804,8 @@ export class IntercomCard extends LitElement {
     }
     if (this._sipError) {
       title = title || t("ready");
-      meta = t("call_failed", { e: this._sipError });
+      const se = this._sipError;
+      meta = t("call_failed", { e: se.key ? `${t(se.key)} · ${se.raw}` : se.raw });
     }
     return { badge, title, meta, ringing: ringing || s.state === SIP.INCOMING };
   }
@@ -1815,7 +1821,7 @@ export class IntercomCard extends LitElement {
     return parts.join(" · ");
   }
 
-  /* ---------- Tuer und Lautstaerke ---------- */
+  /* ---------- Door and volume ---------- */
 
   _doorInfo(t) {
     const d = this._doorCfg();
@@ -1951,14 +1957,14 @@ export class IntercomCard extends LitElement {
     return { text: t("msg_visitor", { s }), note: false };
   }
 
-  /* ---------- Ansagen ---------- */
+  /* ---------- Announcements ---------- */
 
-  _ansagen() {
+  _announcements() {
     const st = this._st("announcements");
     return (st && st.attributes && st.attributes.list) || [];
   }
 
-  _ansageAktiv() {
+  _announcementActive() {
     const st = this._st("announcements");
     return st && st.attributes ? st.attributes.active : null;
   }
@@ -1967,7 +1973,7 @@ export class IntercomCard extends LitElement {
     this._svc("activate_announcement", { name });
   }
 
-  async _playAnsage(a) {
+  async _playAnnouncement(a) {
     if (this._playing === a.file) {
       this._stopAudio();
       return;
@@ -1997,14 +2003,14 @@ export class IntercomCard extends LitElement {
       try {
         this._audio.pause();
       } catch (e) {
-        /* egal */
+        /* ignore */
       }
     }
     this._audio = null;
     this._playing = null;
   }
 
-  _deleteAnsage(a) {
+  _deleteAnnouncement(a) {
     const key = `ann:${a.file}`;
     if (this._confirm !== key) {
       this._setConfirm(key);
@@ -2018,9 +2024,9 @@ export class IntercomCard extends LitElement {
   _renameSave() {
     const r = this._renaming;
     if (!r) return;
-    const neu = (r.value || "").trim();
+    const newName = (r.value || "").trim();
     this._renaming = null;
-    if (neu && neu !== r.name) this._svc("rename_announcement", { name: r.name, new_name: neu });
+    if (newName && newName !== r.name) this._svc("rename_announcement", { name: r.name, new_name: newName });
   }
 
   async _recStart(t) {
@@ -2082,7 +2088,7 @@ export class IntercomCard extends LitElement {
     try {
       const fd = new FormData();
       fd.append("name", name);
-      fd.append("file", r.blob, `ansage.${r.ext}`);
+      fd.append("file", r.blob, `announcement.${r.ext}`);
       const url = (this._info && this._info.upload_url) || "/api/ha_intercom/announcement/upload";
       const resp = await this.hass.fetchWithAuth(url, { method: "POST", body: fd });
       if (!resp.ok) {
@@ -2091,7 +2097,7 @@ export class IntercomCard extends LitElement {
           const j = await resp.json();
           if (j && j.message) msg = j.message;
         } catch (e) {
-          /* keine JSON-Antwort */
+          /* no JSON response */
         }
         throw new Error(msg);
       }
@@ -2103,7 +2109,7 @@ export class IntercomCard extends LitElement {
     }
   }
 
-  /* ---------- Einstellungen ---------- */
+  /* ---------- Settings ---------- */
 
   _openSettings() {
     const s = this._config.settings;
@@ -2117,7 +2123,7 @@ export class IntercomCard extends LitElement {
     this._popup = openSettingsPopup(this.hass, cfg);
   }
 
-  /* ---------- Darstellung ---------- */
+  /* ---------- Rendering ---------- */
 
   render() {
     if (!this._config) return nothing;
@@ -2204,7 +2210,7 @@ export class IntercomCard extends LitElement {
     </section>`;
   }
 
-  /* Karte neben dem Livebild: Alarmanlage, sonst Status */
+  /* Card next to the live view: alarm panel, otherwise status */
   _renderSide(t) {
     if (this._alarmCfg()) return this._renderAlarm(t);
     const info = this._info || {};
@@ -2310,7 +2316,7 @@ export class IntercomCard extends LitElement {
     if (this._pad) this._pad = { ...this._pad, busy: false, code: "", error: this._alarmFailReason || this.t("al_code_wrong") };
   }
 
-  /* Dienst aufrufen und pruefen, ob die Anlage wirklich in den Zielzustand geht; Alarmo lehnt falsche Codes ohne Fehler ab */
+  /* Call the service and check that the panel really reaches the target state; Alarmo rejects wrong codes without an error */
   async _alarmCall(mode, code) {
     const a = this._alarmCfg();
     const services = {
@@ -2446,7 +2452,7 @@ export class IntercomCard extends LitElement {
     } else if (!s.available) {
       top = html`<div class="statusline"><span class="dot off"></span>${t("sip_missing")} · ${t("sip_hint")}</div>`;
     } else {
-      /* Ruhezustand: gleicher Block wie im Gespraech, Telefon-Symbol neutral */
+      /* Idle: same block as during a call, phone icon neutral */
       const reg = info.ext_door ? stateOf(this.hass, `binary_sensor.${info.ext_door}_registered`) : null;
       const meta = [reg ? (reg.state === "on" ? t("door_ready") : t("door_not_ready")) : "", this._lastRingText(t)].filter(Boolean).join(" · ");
       top = html`<div class="callstate">
@@ -2462,7 +2468,7 @@ export class IntercomCard extends LitElement {
     </div>`;
   }
 
-  /* Aktionen unter dem Anrufbereich: Haustuer, Mailbox, Sprachansage, weitere Entitaeten */
+  /* Actions below the call area: front door, mailbox, voice announcement, further entities */
   _actionList() {
     const c = this._config;
     if (Array.isArray(c.actions)) return c.actions.map((x) => (typeof x === "string" ? { type: x } : x));
@@ -2560,9 +2566,9 @@ export class IntercomCard extends LitElement {
       name = name || t("mailbox");
     } else if (type === "announcement") {
       entity = this._ent("voice_announcement");
-      name = name || t("s_sprachansage");
-      const aktiv = this._ansageAktiv();
-      if (aktiv && aktiv !== "none") sub = aktiv;
+      name = name || t("s_voice_announcement");
+      const active = this._announcementActive();
+      if (active && active !== "none") sub = active;
     }
     const st = stateOf(this.hass, entity);
     if (!st) return nothing;
@@ -2575,23 +2581,23 @@ export class IntercomCard extends LitElement {
     </button>`;
   }
 
-  /* Infospalte rechts vom Anrufbereich */
+  /* Info column to the right of the call area */
   _renderInfos(t) {
     const st = this._st("messages");
-    const neue = Number((st && st.attributes && st.attributes.new) || 0);
+    const newCount = Number((st && st.attributes && st.attributes.new) || 0);
     const lang = pickLanguage(this.hass, this._config);
     const last = this._st("last_ring");
     const lastOk = last && last.state && last.state !== "unknown" && last.state !== "unavailable";
-    const aktiv = this._ansageAktiv();
-    const ansageOn = isOn(this.hass, this._ent("voice_announcement"));
-    const frz = this._st("ringback");
-    const dauer = this._st("ring_duration");
+    const active = this._announcementActive();
+    const announcementOn = isOn(this.hass, this._ent("voice_announcement"));
+    const ringback = this._st("ringback");
+    const duration = this._st("ring_duration");
     const rows = [];
-    if (st) rows.push({ k: t("info_new"), v: String(neue), cls: neue > 0 ? "new" : "", click: () => (this._mtab = "messages") });
+    if (st) rows.push({ k: t("info_new"), v: String(newCount), cls: newCount > 0 ? "new" : "", click: () => (this._mtab = "messages") });
     if (last) rows.push({ k: t("last_ring"), v: lastOk ? fmtWhen(last.state, lang, t) : t("never") });
-    if (this._ent("voice_announcement")) rows.push({ k: t("s_sprachansage"), v: ansageOn ? (aktiv && aktiv !== "none" ? aktiv : t("on")) : t("off"), cls: ansageOn ? "on" : "" });
-    if (frz) rows.push({ k: t("info_ringback"), v: this._fmtState(frz) });
-    if (dauer && Number.isFinite(Number(dauer.state))) rows.push({ k: t("s_klingeldauer"), v: `${Math.round(Number(dauer.state))} s` });
+    if (this._ent("voice_announcement")) rows.push({ k: t("s_voice_announcement"), v: announcementOn ? (active && active !== "none" ? active : t("on")) : t("off"), cls: announcementOn ? "on" : "" });
+    if (ringback) rows.push({ k: t("info_ringback"), v: this._fmtState(ringback) });
+    if (duration && Number.isFinite(Number(duration.state))) rows.push({ k: t("s_ring_duration"), v: `${Math.round(Number(duration.state))} s` });
     for (const extra of this._config.info || []) {
       const e = typeof extra === "string" ? { entity: extra } : extra;
       const es = stateOf(this.hass, e.entity);
@@ -2622,7 +2628,7 @@ export class IntercomCard extends LitElement {
     return ent ? { entity: ent } : null;
   }
 
-  /* Nebenstellen der Asterisk-Integration ohne die eigene; Name aus dem Geraeteregister oder aus contacts: */
+  /* Extensions of the Asterisk integration without our own; name from the device registry or from contacts: */
   _allContacts(t) {
     const info = this._info || {};
     const overrides = new Map(((this._config && this._config.contacts) || []).map((x) => [String(x.extension || ""), x]));
@@ -2713,27 +2719,27 @@ export class IntercomCard extends LitElement {
   _renderMailbox(t) {
     const st = this._st("messages");
     const entries = this._entries();
-    const neue = Number((st && st.attributes && st.attributes.new) || 0);
+    const newCount = Number((st && st.attributes && st.attributes.new) || 0);
     const recording = !!(st && st.attributes && st.attributes.recording);
     const lang = pickLanguage(this.hass, this._config);
     const showAnn = this._config.show.announcements;
     const tab = showAnn && this._mtab === "announcements" ? "announcements" : "messages";
-    const list = this._ansagen();
-    const aktiv = this._ansageAktiv();
-    const none = !aktiv || aktiv === "none";
+    const list = this._announcements();
+    const active = this._announcementActive();
+    const none = !active || active === "none";
     return html`<section class="card mailbox" aria-label=${t("mailbox")}>
       <div class="card-head">
         <h2>${t("mailbox")}</h2>
         <div class="r">
-          ${tab === "messages" && neue > 0 ? html`<span class="badge">${t("new_n", { n: neue })}</span>` : nothing}
-          ${tab === "messages" && neue > 0 ? html`<button type="button" class="pill small" @click=${() => this._svc("alle_gesehen")}>${t("all_seen")}</button>` : nothing}
-          ${tab === "announcements" ? html`<span class="badge ${none ? "muted" : "ok"}">${t("active")}: ${none ? t("none") : aktiv}</span>` : nothing}
+          ${tab === "messages" && newCount > 0 ? html`<span class="badge">${t("new_n", { n: newCount })}</span>` : nothing}
+          ${tab === "messages" && newCount > 0 ? html`<button type="button" class="pill small" @click=${() => this._svc("mark_all_seen")}>${t("all_seen")}</button>` : nothing}
+          ${tab === "announcements" ? html`<span class="badge ${none ? "muted" : "ok"}">${t("active")}: ${none ? t("none") : active}</span>` : nothing}
         </div>
       </div>
       ${showAnn
         ? html`<div class="tabs" role="tablist">
             <button type="button" role="tab" aria-selected=${tab === "messages" ? "true" : "false"} @click=${() => (this._mtab = "messages")}>
-              ${t("messages")}${neue > 0 ? html`<span class="cnt">${neue}</span>` : nothing}
+              ${t("messages")}${newCount > 0 ? html`<span class="cnt">${newCount}</span>` : nothing}
             </button>
             <button type="button" role="tab" aria-selected=${tab === "announcements" ? "true" : "false"} @click=${() => (this._mtab = "announcements")}>
               ${t("announcements")}${list.length ? html`<span class="cnt">${list.length}</span>` : nothing}
@@ -2741,7 +2747,7 @@ export class IntercomCard extends LitElement {
           </div>`
         : nothing}
       ${tab === "announcements"
-        ? this._renderAnsagenPane(t, lang, list, none)
+        ? this._renderAnnouncementsPane(t, lang, list, none)
         : html`<div class="list">
             ${recording
               ? html`<div class="recbanner"><span class="recdot"></span><div><div class="t">${t("recording_now")}</div><div class="s">${t("recording_hint")}</div></div></div>`
@@ -2757,7 +2763,7 @@ export class IntercomCard extends LitElement {
     </section>`;
   }
 
-  _renderAnsagenPane(t, lang, list, none) {
+  _renderAnnouncementsPane(t, lang, list, none) {
     const r = this._rec;
     let foot;
     if (r.phase === "recording") {
@@ -2790,7 +2796,7 @@ export class IntercomCard extends LitElement {
         ${repeat(
           list,
           (a) => a.file,
-          (a) => this._renderAnsage(a, t, lang)
+          (a) => this._renderAnnouncement(a, t, lang)
         )}
         <div class="ann">
           <button type="button" class="radio ${none ? "on" : ""}" role="radio" aria-checked=${none ? "true" : "false"} aria-label=${t("no_announcement")} @click=${() => this._activate("none")}></button>
@@ -2840,7 +2846,7 @@ export class IntercomCard extends LitElement {
         : nothing}`;
   }
 
-  _renderAnsage(a, t, lang) {
+  _renderAnnouncement(a, t, lang) {
     const renaming = this._renaming && this._renaming.file === a.file;
     const confirm = this._confirm === `ann:${a.file}`;
     const playing = this._playing === a.file;
@@ -2861,16 +2867,16 @@ export class IntercomCard extends LitElement {
               @blur=${() => this._renameSave()}
             />`
           : html`<div class="t"><span>${a.name}</span>
-              <button type="button" class="edit" aria-label=${t("rename")} @click=${() => (this._renaming = { datei: a.file, name: a.name, value: a.name })}>${icon("pencil")}</button></div>`}
+              <button type="button" class="edit" aria-label=${t("rename")} @click=${() => (this._renaming = { file: a.file, name: a.name, value: a.name })}>${icon("pencil")}</button></div>`}
         <div class="s">${t("recorded_on", { d: fmtDate(a.created, lang), s: Math.round(a.duration || 0) })}</div>
       </div>
       <div class="ctl">
         ${confirm
           ? html`<span class="confirm">${t("really_delete")}
-              <button type="button" class="pill small danger" @click=${() => this._deleteAnsage(a)}>${t("yes")}</button>
+              <button type="button" class="pill small danger" @click=${() => this._deleteAnnouncement(a)}>${t("yes")}</button>
               <button type="button" class="pill small" @click=${() => (this._confirm = null)}>${t("no")}</button></span>`
-          : html`<button type="button" class="icb ${playing ? "on" : ""}" aria-label=${playing ? t("stop_listen") : t("listen")} @click=${() => this._playAnsage(a)}>${icon(playing ? "stop" : "play")}</button>
-              <button type="button" class="icb" aria-label=${t("delete")} @click=${() => this._deleteAnsage(a)}>${icon("trash")}</button>`}
+          : html`<button type="button" class="icb ${playing ? "on" : ""}" aria-label=${playing ? t("stop_listen") : t("listen")} @click=${() => this._playAnnouncement(a)}>${icon(playing ? "stop" : "play")}</button>
+              <button type="button" class="icb" aria-label=${t("delete")} @click=${() => this._deleteAnnouncement(a)}>${icon("trash")}</button>`}
       </div>
     </div>`;
   }
@@ -2882,13 +2888,13 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "intercom-card",
   name: "Intercom",
-  description: "Türsprechanlage: Livebild, Anruf, Tür, Mailbox, Ansagen",
+  description: "Door intercom: live view, call, door, mailbox, announcements",
   preview: false,
 });
 window.customCards.push({
   type: "intercom-settings-card",
-  name: "Intercom Einstellungen",
-  description: "Einstellungen der Intercom-Integration",
+  name: "Intercom settings",
+  description: "Settings of the Intercom integration",
   preview: false,
 });
 

@@ -1,4 +1,4 @@
-"""HTTP-Endpunkte: geschuetzte Medienauslieferung und Upload von Ansagen."""
+"""HTTP endpoints: protected media delivery and upload of announcements."""
 
 from __future__ import annotations
 
@@ -24,10 +24,10 @@ def _manager_for(hass: HomeAssistant, request: web.Request) -> IntercomManager |
 
 
 class IntercomMediaView(HomeAssistantView):
-    """Liefert Clips, Bilder, Ansagen und Freizeichen aus, nur mit Anmeldung.
+    """Serves clips, images, announcements and ringback tones, authenticated only.
 
-    Die Karte holt sich ueber auth/sign_path einen signierten Link auf diese Adresse;
-    web.FileResponse unterstuetzt Range-Anfragen, also Spulen im Video.
+    The card obtains a signed link to this address via auth/sign_path;
+    web.FileResponse supports range requests, i.e. seeking in the video.
     """
 
     url = URL_MEDIA
@@ -50,10 +50,10 @@ class IntercomMediaView(HomeAssistantView):
 
 
 class IntercomUploadView(HomeAssistantView):
-    """Nimmt eine im Browser aufgenommene Ansage entgegen (multipart: file, name)."""
+    """Accepts an announcement recorded in the browser (multipart: file, name)."""
 
     url = URL_UPLOAD
-    name = "api:intercom:ansage_upload"
+    name = "api:intercom:announcement_upload"
     requires_auth = True
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -62,13 +62,13 @@ class IntercomUploadView(HomeAssistantView):
     async def post(self, request: web.Request) -> web.Response:
         manager = _manager_for(self.hass, request)
         if manager is None:
-            return self.json_message("Intercom nicht eingerichtet", 404)
+            return self.json_message("Intercom not set up", 404)
         if not request.content_type.startswith("multipart/"):
-            return self.json_message("multipart/form-data erwartet", 400)
+            return self.json_message("multipart/form-data expected", 400)
 
         reader = await request.multipart()
         data: bytes | None = None
-        filename = "aufnahme.webm"
+        filename = "recording.webm"
         name: str | None = None
         while True:
             part = await reader.next()
@@ -86,13 +86,13 @@ class IntercomUploadView(HomeAssistantView):
                         break
                     size += len(chunk)
                     if size > MAX_UPLOAD_BYTES:
-                        return self.json_message("Datei zu gross", 413)
+                        return self.json_message("File too large", 413)
                     chunks.append(chunk)
                 data = b"".join(chunks)
         if not data:
-            return self.json_message("Keine Datei erhalten", 400)
+            return self.json_message("No file received", 400)
 
-        ansage = await manager.async_save_ansage_upload(data, filename, name)
-        if ansage is None:
-            return self.json_message("Konvertierung fehlgeschlagen", 500)
-        return self.json({"ok": True, "announcement": asdict(ansage)})
+        announcement = await manager.async_save_announcement_upload(data, filename, name)
+        if announcement is None:
+            return self.json_message("Conversion failed", 500)
+        return self.json({"ok": True, "announcement": asdict(announcement)})

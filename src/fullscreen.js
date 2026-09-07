@@ -1,4 +1,4 @@
-/* Vollbild-Ebene: grosses Livebild mit den Anrufknoepfen, wird an document.body gehaengt. */
+/* Fullscreen layer: large live view with the call buttons, attached to document.body. */
 
 import { LitElement, html, css, nothing } from "lit";
 import { tokens, controls } from "./styles.js";

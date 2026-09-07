@@ -44,7 +44,7 @@
       },
       "check": {
         "title": "Check",
-        "description": "ffmpeg: {ffmpeg}\n\nStream: {stream}\n\nBase folder: {ordner}\n\nAMI connected: {ami}\n\nAsterisk add-on: {app}\n\nsip-core: {sip}\n\nSubmit creates the integration. Dialplan and MOH class are described in the README.",
+        "description": "ffmpeg: {ffmpeg}\n\nStream: {stream}\n\nBase folder: {folder}\n\nAMI connected: {ami}\n\nAsterisk add-on: {app}\n\nsip-core: {sip}\n\nSubmit creates the integration. Dialplan and MOH class are described in the README.",
         "data": {
           "ignore_stream": "Ignore the stream error and create anyway"
         }
@@ -80,7 +80,7 @@
       },
       "move": {
         "title": "Change folder",
-        "description": "The base folder changes from {alt} to {neu}. The old folder holds {messages} messages, {announcements} announcements and {ringback} ringback files. With the switch on they are moved to the new folder; files with the same name in the target are left untouched. Afterwards the integration reloads and reads the folders.",
+        "description": "The base folder changes from {old} to {new}. The old folder holds {messages} messages, {announcements} announcements and {ringback} ringback files. With the switch on they are moved to the new folder; files with the same name in the target are left untouched. Afterwards the integration reloads and reads the folders.",
         "data": {
           "move_files": "Move files to the new folder"
         }

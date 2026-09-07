@@ -1,4 +1,4 @@
-"""WebSocket-Befehl fuer die Karte: Konfiguration, Entitaeten und Nebenstellen eines Intercom-Eintrags."""
+"""WebSocket command for the card: configuration, entities and extensions of an Intercom entry."""
 
 from __future__ import annotations
 
@@ -37,14 +37,14 @@ WS_TYPE_INFO = f"{DOMAIN}/info"
 
 @callback
 def async_register_websocket(hass: HomeAssistant) -> None:
-    """Befehle einmalig registrieren."""
+    """Register the commands once."""
     websocket_api.async_register_command(hass, ws_info)
 
 
 @websocket_api.websocket_command({vol.Required("type"): WS_TYPE_INFO, vol.Optional("entry_id"): str})
 @callback
 def ws_info(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
-    """Liefert je Eintrag die Konfiguration, die Zuordnung Schluessel -> Entitaets-ID und die Nebenstellen."""
+    """Returns, per entry, the configuration, the mapping key -> entity ID and the extensions."""
     registry = er.async_get(hass)
     wanted = msg.get("entry_id")
     entries: list[dict[str, Any]] = []

@@ -1,4 +1,4 @@
-"""Ereignis-Entitaet: klingeln, angenommen, aufgezeichnet, nachricht."""
+"""Event entity: ring, answered, recorded, message."""
 
 from __future__ import annotations
 
@@ -16,11 +16,11 @@ from .entity import IntercomEntity
 async def async_setup_entry(
     hass: HomeAssistant, entry: IntercomConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    async_add_entities([KlingelEvent(entry.runtime_data)])
+    async_add_entities([DoorbellEvent(entry.runtime_data)])
 
 
-class KlingelEvent(IntercomEntity, EventEntity):
-    """Automationen hoeren hierauf statt auf die Tuerstation direkt."""
+class DoorbellEvent(IntercomEntity, EventEntity):
+    """Automations listen to this instead of the door station directly."""
 
     _attr_device_class = EventDeviceClass.DOORBELL
     _attr_event_types = EVENT_TYPES

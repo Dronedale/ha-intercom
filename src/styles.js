@@ -1,6 +1,6 @@
 import { css } from "lit";
 
-/* Farb- und Formvariablen, abgeleitet aus dem HA-Theme; eigene Werte per --intercom-* ueberschreibbar. */
+/* Colour and shape variables derived from the HA theme; overridable via --intercom-*. */
 export const tokens = css`
   :host {
     --ic-card: var(--ha-card-background, var(--card-background-color, #ffffff));
@@ -15,7 +15,7 @@ export const tokens = css`
     --ic-danger: var(--error-color, #d4443b);
     --ic-danger-soft: rgba(var(--rgb-error-color, 212, 68, 59), 0.14);
     --ic-live-ground: #14171b;
-    /* Eigene Rundung, Schatten und Rand: Panel-Ansichten setzen die ha-card-Variablen auf 0/none, das soll hier nicht durchschlagen */
+    /* Own radius, shadow and border: panel views set the ha-card variables to 0/none, which must not leak through here */
     --ic-shadow: var(--intercom-shadow, 0 1px 2px rgba(20, 30, 40, 0.06), 0 6px 18px rgba(20, 30, 40, 0.06));
     --ic-radius: var(--intercom-radius, 14px);
     --ic-border: 1px solid var(--intercom-border-color, var(--divider-color, rgba(128, 128, 128, 0.18)));
@@ -60,7 +60,7 @@ export const tokens = css`
   }
 `;
 
-/* Wiederkehrende Bausteine: Karte, Kopfzeile, Knoepfe, Punkte, Schalter, Regler. */
+/* Recurring building blocks: card, header, buttons, dots, switches, sliders. */
 export const controls = css`
   .card {
     background: var(--ic-card);

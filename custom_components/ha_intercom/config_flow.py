@@ -1,6 +1,6 @@
-"""Konfigurationsdialog der Intercom-Integration.
+"""Config flow of the Intercom integration.
 
-Schritte: Voraussetzungen (erkannt), Quellen, Sprechanlage, ggf. Zustandssensoren, Haus, Pruefung.
+Steps: requirements (detected), sources, intercom, state sensors if needed, house, check.
 """
 
 from __future__ import annotations
@@ -30,11 +30,11 @@ from .const import (
     CONF_LOCK_ENTITY,
     CONF_MAX_CLIP_SECONDS,
     CONF_MOVE_FILES,
-    DIR_ANSAGE,
-    DIR_FREIZEICHEN,
-    DIR_FREIZEICHEN_AKTIV,
-    DIR_KLINGELTOENE,
-    DIR_KONVERTIERT,
+    DIR_ANNOUNCEMENTS,
+    DIR_RINGBACK,
+    DIR_RINGBACK_ACTIVE,
+    DIR_RINGTONES,
+    DIR_CONVERTED,
     DIR_MAILBOX,
     CONF_SNAPSHOT_DELAY,
     CONF_STREAM_URL,
@@ -53,7 +53,7 @@ from .const import (
     DOMAIN,
 )
 from .discovery import (
-    Umgebung,
+    Environment,
     ami_connected,
     async_check_dir,
     async_check_ffmpeg,
@@ -87,7 +87,7 @@ def _req(key: str, defaults: dict[str, Any], fallback: Any = None) -> vol.Requir
 
 
 def _opt(key: str, defaults: dict[str, Any], fallback: Any = None) -> vol.Optional:
-    """Optionales Feld: Vorschlag statt Vorgabe, damit ein leeres Feld nicht als None validiert wird."""
+    """Optional field: suggestion instead of default, so that an empty field is not validated as None."""
     value = defaults.get(key, fallback)
     if value in (None, ""):
         return vol.Optional(key)
@@ -105,7 +105,7 @@ def _select(options: list[tuple[str, str]], custom: bool = True) -> selector.Sel
 
 
 def _guess(hass: HomeAssistant, domains: tuple[str, ...], hints: tuple[str, ...]) -> str | None:
-    """Erste Entitaet, deren ID einen der Hinweise enthaelt; Reihenfolge der Hinweise = Vorrang."""
+    """First entity whose ID contains one of the hints; hint order = precedence."""
     ids = [s.entity_id for s in hass.states.async_all(domains)]
     for hint in hints:
         for entity_id in sorted(ids):
@@ -114,7 +114,7 @@ def _guess(hass: HomeAssistant, domains: tuple[str, ...], hints: tuple[str, ...]
     return None
 
 
-def _ext_label(ext: str, env: Umgebung) -> str:
+def _ext_label(ext: str, env: Environment) -> str:
     tags = []
     if ext in env.sip_extensions:
         tags.append("sip-core")
@@ -123,7 +123,7 @@ def _ext_label(ext: str, env: Umgebung) -> str:
     return f"{ext} ({', '.join(tags)})" if tags else ext
 
 
-def _schema_quellen(hass: HomeAssistant, defaults: dict[str, Any]) -> vol.Schema:
+def _schema_sources(hass: HomeAssistant, defaults: dict[str, Any]) -> vol.Schema:
     return vol.Schema(
         {
             _req(CONF_TRIGGER_ENTITY, defaults, _guess(hass, ("sensor", "binary_sensor", "event"), RING_HINTS)): ENTITY_STATE,
@@ -134,7 +134,7 @@ def _schema_quellen(hass: HomeAssistant, defaults: dict[str, Any]) -> vol.Schema
     )
 
 
-def _schema_sip(defaults: dict[str, Any], env: Umgebung) -> vol.Schema:
+def _schema_sip(defaults: dict[str, Any], env: Environment) -> vol.Schema:
     exts = env.extensions
     ext_sel: Any = _select([(e, _ext_label(e, env)) for e in exts]) if exts else TEXT
     door = defaults.get(CONF_EXT_DOOR) or env.sip_door or (DEFAULT_EXT_DOOR if not exts or DEFAULT_EXT_DOOR in exts else exts[-1])
@@ -154,7 +154,7 @@ def _schema_sip(defaults: dict[str, Any], env: Umgebung) -> vol.Schema:
     return vol.Schema(fields)
 
 
-def _schema_sensoren(defaults: dict[str, Any], missing: list[str]) -> vol.Schema:
+def _schema_sensors(defaults: dict[str, Any], missing: list[str]) -> vol.Schema:
     fields: dict[Any, Any] = {}
     if CONF_DOOR_STATE_ENTITY in missing:
         fields[_opt(CONF_DOOR_STATE_ENTITY, defaults)] = ENTITY_SENSOR
@@ -165,7 +165,7 @@ def _schema_sensoren(defaults: dict[str, Any], missing: list[str]) -> vol.Schema
     return vol.Schema(fields)
 
 
-def _schema_haus(defaults: dict[str, Any]) -> vol.Schema:
+def _schema_house(defaults: dict[str, Any]) -> vol.Schema:
     return vol.Schema(
         {
             _opt(CONF_ALARM_ENTITY, defaults): ENTITY_ALARM,
@@ -175,13 +175,13 @@ def _schema_haus(defaults: dict[str, Any]) -> vol.Schema:
     )
 
 
-def _schema_pruefung(stream_failed: bool) -> vol.Schema:
+def _schema_check(stream_failed: bool) -> vol.Schema:
     if not stream_failed:
         return vol.Schema({})
     return vol.Schema({vol.Optional(CONF_IGNORE_STREAM, default=False): BOOL})
 
 
-def _schema_options(defaults: dict[str, Any], env: Umgebung) -> vol.Schema:
+def _schema_options(defaults: dict[str, Any], env: Environment) -> vol.Schema:
     fields: dict[Any, Any] = {_req(CONF_STREAM_URL, defaults, DEFAULT_STREAM_URL): TEXT}
     if env.addons:
         current = defaults.get(CONF_ADDON_SLUG)
@@ -211,14 +211,14 @@ def _schema_options(defaults: dict[str, Any], env: Umgebung) -> vol.Schema:
     return vol.Schema(fields)
 
 
-def _voraussetzungen(env: Umgebung) -> dict[str, str]:
-    """Platzhalter fuer den ersten Schritt."""
+def _requirements(env: Environment) -> dict[str, str]:
+    """Placeholders for the first step."""
     if env.addons:
         app = f"{OK} " + ", ".join(f"{name} ({slug})" for slug, name in env.addons)
     elif env.supervisor:
         app = f"{BAD}"
     else:
-        app = f"{NONE} kein Supervisor"
+        app = f"{NONE} no Supervisor"
     asterisk = f"{OK} asterisk.send_action" if env.asterisk_service else (f"{OK}" if env.asterisk_entry else BAD)
     if env.sip_core:
         sip = f"{OK} " + (", ".join(env.sip_extensions) if env.sip_extensions else "")
@@ -231,31 +231,31 @@ _LOGGER = logging.getLogger(__name__)
 
 MEDIA_SUBDIRS = (
     DIR_MAILBOX,
-    DIR_ANSAGE,
-    DIR_FREIZEICHEN,
-    f"{DIR_FREIZEICHEN}/{DIR_KONVERTIERT}",
-    f"{DIR_FREIZEICHEN}/{DIR_FREIZEICHEN_AKTIV}",
-    DIR_KLINGELTOENE,
+    DIR_ANNOUNCEMENTS,
+    DIR_RINGBACK,
+    f"{DIR_RINGBACK}/{DIR_CONVERTED}",
+    f"{DIR_RINGBACK}/{DIR_RINGBACK_ACTIVE}",
+    DIR_RINGTONES,
 )
 
 
 def _count_media(base: str) -> dict[str, int]:
-    """Bestand im Basisordner: Nachrichten, Ansagen, Freizeichen-Quellen und alle Dateien insgesamt."""
+    """Inventory of the base folder: messages, announcements, ringback sources and all files in total."""
     root = Path(base)
-    mailbox, ansage, freizeichen = root / DIR_MAILBOX, root / DIR_ANSAGE, root / DIR_FREIZEICHEN
+    mailbox, announcement, ringback = root / DIR_MAILBOX, root / DIR_ANNOUNCEMENTS, root / DIR_RINGBACK
     counts = {
         DIR_MAILBOX: len(list(mailbox.glob("*.json"))) if mailbox.is_dir() else 0,
-        DIR_ANSAGE: len(list(ansage.glob("*.wav"))) if ansage.is_dir() else 0,
-        DIR_FREIZEICHEN: sum(1 for p in freizeichen.iterdir() if p.is_file()) if freizeichen.is_dir() else 0,
+        DIR_ANNOUNCEMENTS: len(list(announcement.glob("*.wav"))) if announcement.is_dir() else 0,
+        DIR_RINGBACK: sum(1 for p in ringback.iterdir() if p.is_file()) if ringback.is_dir() else 0,
     }
-    counts["gesamt"] = sum(
+    counts["total"] = sum(
         1 for sub in MEDIA_SUBDIRS if (root / sub).is_dir() for p in (root / sub).iterdir() if p.is_file()
     )
     return counts
 
 
 def _move_media(old: str, new: str) -> int:
-    """Dateien der Medienordner in den neuen Basisordner verschieben; gleichnamige Dateien im Ziel bleiben."""
+    """Move the files of the media folders to the new base folder; files with the same name in the target are kept."""
     src, dst = Path(old), Path(new)
     moved = 0
     for sub in MEDIA_SUBDIRS:
@@ -275,16 +275,16 @@ def _move_media(old: str, new: str) -> int:
 
 
 class IntercomConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Dialog mit Erkennung und Pruefung."""
+    """Flow with detection and check."""
 
     VERSION = 1
 
     def __init__(self) -> None:
         self._data: dict[str, Any] = {}
-        self._env: Umgebung | None = None
+        self._env: Environment | None = None
         self._missing: list[str] = []
 
-    async def _umgebung(self) -> Umgebung:
+    async def _environment(self) -> Environment:
         if self._env is None:
             self._env = await async_discover(self.hass)
         return self._env
@@ -292,7 +292,7 @@ class IntercomConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
-        env = await self._umgebung()
+        env = await self._environment()
         if not env.asterisk:
             return self.async_abort(reason="asterisk_missing")
         if env.supervisor and not env.addons:
@@ -300,17 +300,17 @@ class IntercomConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_sources()
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema({}), description_placeholders=_voraussetzungen(env)
+            step_id="user", data_schema=vol.Schema({}), description_placeholders=_requirements(env)
         )
 
     async def async_step_sources(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             self._data.update(user_input)
             return await self.async_step_sip()
-        return self.async_show_form(step_id="sources", data_schema=_schema_quellen(self.hass, self._data))
+        return self.async_show_form(step_id="sources", data_schema=_schema_sources(self.hass, self._data))
 
     async def async_step_sip(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        env = await self._umgebung()
+        env = await self._environment()
         if user_input is not None:
             self._data.update(user_input)
             if not env.addons and env.supervisor:
@@ -342,7 +342,7 @@ class IntercomConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_house()
         return self.async_show_form(
             step_id="sensors",
-            data_schema=_schema_sensoren(self._data, self._missing),
+            data_schema=_schema_sensors(self._data, self._missing),
             description_placeholders={
                 "ext_door": self._data.get(CONF_EXT_DOOR, ""),
                 "ext_tablet": self._data.get(CONF_EXT_TABLET, ""),
@@ -355,12 +355,12 @@ class IntercomConfigFlow(ConfigFlow, domain=DOMAIN):
             self._data.pop(CONF_LOCK_ENTITY, None)
             self._data.update(user_input)
             return await self.async_step_check()
-        return self.async_show_form(step_id="house", data_schema=_schema_haus(self._data))
+        return self.async_show_form(step_id="house", data_schema=_schema_house(self._data))
 
     async def async_step_check(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        env = await self._umgebung()
+        env = await self._environment()
         ignore_stream = bool(user_input and user_input.get(CONF_IGNORE_STREAM))
-        checks = await self._pruefen()
+        checks = await self._run_checks()
         errors: dict[str, str] = {}
         if not checks["ffmpeg"][0]:
             errors["base"] = "ffmpeg_missing"
@@ -375,12 +375,12 @@ class IntercomConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = {}
         return self.async_show_form(
             step_id="check",
-            data_schema=_schema_pruefung(not checks["stream"][0]),
+            data_schema=_schema_check(not checks["stream"][0]),
             errors=errors,
-            description_placeholders=self._ergebnis(checks, env),
+            description_placeholders=self._result(checks, env),
         )
 
-    async def _pruefen(self) -> dict[str, tuple[bool, str]]:
+    async def _run_checks(self) -> dict[str, tuple[bool, str]]:
         ffmpeg = await async_check_ffmpeg(self.hass)
         stream = await async_check_stream(str(self._data.get(CONF_STREAM_URL, ""))) if ffmpeg[0] else (False, "ffprobe")
         folder = await async_check_dir(self.hass, str(self._data.get(CONF_BASE_DIR, DEFAULT_BASE_DIR)))
@@ -393,15 +393,15 @@ class IntercomConfigFlow(ConfigFlow, domain=DOMAIN):
         return {"ffmpeg": ffmpeg, "stream": stream, "dir": folder, "ami": ami_result}
 
     @staticmethod
-    def _ergebnis(checks: dict[str, tuple[bool, str]], env: Umgebung) -> dict[str, str]:
+    def _result(checks: dict[str, tuple[bool, str]], env: Environment) -> dict[str, str]:
         def mark(item: tuple[bool, str]) -> str:
             return f"{OK if item[0] else BAD} {item[1]}"
 
-        base = _voraussetzungen(env)
+        base = _requirements(env)
         return {
             "ffmpeg": mark(checks["ffmpeg"]),
             "stream": mark(checks["stream"]),
-            "ordner": mark(checks["dir"]),
+            "folder": mark(checks["dir"]),
             "ami": checks["ami"][1],
             "app": base["app"],
             "sip": base["sip"],
@@ -414,9 +414,9 @@ class IntercomConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class IntercomOptionsFlow(OptionsFlow):
-    """Optionen: Stream, App, Alarmzentrale, Schloss, Ordner, Hoechstdauer, Standbild, Zustandsnamen.
+    """Options: stream, add-on, alarm panel, lock, folder, maximum duration, snapshot, state names.
 
-    Wechselt der Basisordner und liegen im alten Ordner Dateien, bietet ein zweiter Schritt den Umzug an.
+    If the base folder changes and the old folder contains files, a second step offers to move them.
     """
 
     def __init__(self) -> None:
@@ -434,7 +434,7 @@ class IntercomOptionsFlow(OptionsFlow):
             user_input[CONF_BASE_DIR] = new
             if new != old:
                 counts = await self.hass.async_add_executor_job(_count_media, old)
-                if counts["gesamt"]:
+                if counts["total"]:
                     self._pending, self._old, self._new = user_input, old, new
                     return await self.async_step_move()
             return self.async_create_entry(title="", data=user_input)
@@ -447,9 +447,9 @@ class IntercomOptionsFlow(OptionsFlow):
             if user_input.get(CONF_MOVE_FILES, True):
                 try:
                     moved = await self.hass.async_add_executor_job(_move_media, self._old, self._new)
-                    _LOGGER.info("Intercom: %s Dateien von %s nach %s verschoben", moved, self._old, self._new)
+                    _LOGGER.info("Intercom: moved %s files from %s to %s", moved, self._old, self._new)
                 except OSError as err:
-                    _LOGGER.warning("Intercom: Verschieben nach %s fehlgeschlagen: %s", self._new, err)
+                    _LOGGER.warning("Intercom: moving to %s failed: %s", self._new, err)
                     errors["base"] = "move_failed"
             if not errors:
                 return self.async_create_entry(title="", data=self._pending)
@@ -459,10 +459,10 @@ class IntercomOptionsFlow(OptionsFlow):
             data_schema=vol.Schema({vol.Optional(CONF_MOVE_FILES, default=True): BOOL}),
             errors=errors,
             description_placeholders={
-                "alt": self._old,
-                "neu": self._new,
+                "old": self._old,
+                "new": self._new,
                 "messages": str(counts[DIR_MAILBOX]),
-                "announcements": str(counts[DIR_ANSAGE]),
-                "ringback": str(counts[DIR_FREIZEICHEN]),
+                "announcements": str(counts[DIR_ANNOUNCEMENTS]),
+                "ringback": str(counts[DIR_RINGBACK]),
             },
         )

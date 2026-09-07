@@ -1,4 +1,4 @@
-/* Anbindung an sip-core (window.sipCore): Zustand beobachten, Anrufe steuern. */
+/* Link to sip-core (window.sipCore): observe its state, control calls. */
 
 export const SIP = { IDLE: "idle", INCOMING: "incoming", OUTGOING: "outgoing", CONNECTING: "connecting", CONNECTED: "connected" };
 
@@ -67,7 +67,7 @@ export class SipLink {
         rext = c.remoteExtension || null;
         rname = c.remoteName || null;
       } catch (e) {
-        /* Getter greift auf eine Sitzung zu, die gerade abgebaut wird */
+        /* getter touches a session that is being torn down */
       }
       this.remoteExtension = rext ? String(rext) : null;
       this.remoteName = rname ? String(rname) : null;
@@ -86,14 +86,14 @@ export class SipLink {
       }
     }
     if (this.state !== SIP.IDLE) this._hookSession();
-    // Anruf, der binnen 3 s wieder auf "frei" faellt, als Fehler melden (z. B. sofort abgewiesen)
+    // Report a call that drops back to idle within 3 s as an error (e.g. rejected immediately)
     if (this.state !== SIP.IDLE && this._prevState === SIP.IDLE) {
       this._callStarted = Date.now();
       this._failCause = null;
     }
     if (this.state === SIP.IDLE && this._prevState && this._prevState !== SIP.IDLE) {
       if (!this._failCause && this._prevState !== SIP.CONNECTED && this._callStarted && Date.now() - this._callStarted < 3000) {
-        this._onError(new Error(this._prevState === SIP.INCOMING ? "eingehender Anruf sofort beendet" : "sofort beendet"));
+        this._onError(new Error(this._prevState === SIP.INCOMING ? "incoming call ended immediately" : "call ended immediately"));
       }
       this._callStarted = 0;
     }
@@ -118,7 +118,7 @@ export class SipLink {
   call(extension) {
     const c = this.core;
     if (!c || typeof c.startCall !== "function" || !extension) {
-      this._onError(new Error(c ? "startCall fehlt" : "sipCore fehlt"));
+      this._onError(new Error(c ? "startCall missing" : "sipCore missing"));
       return;
     }
     try {
@@ -131,7 +131,7 @@ export class SipLink {
     window.setTimeout(() => this.refresh(), 300);
   }
 
-  /* Die laufende JsSIP-Sitzung beobachten, damit die Ursache eines Fehlschlags in der Karte erscheint. */
+  /* Watch the running JsSIP session so the cause of a failure shows up in the card. */
   _hookSession() {
     const c = this.core;
     const session = c && c.RTCSession;
@@ -146,7 +146,7 @@ export class SipLink {
         this.refresh();
       });
     } catch (err) {
-      /* keine EventEmitter-Sitzung */
+      /* not an EventEmitter session */
     }
   }
 
@@ -157,7 +157,7 @@ export class SipLink {
       if (s.isMuted().audio) s.unmute({ audio: true });
       else s.mute({ audio: true });
     } catch (e) {
-      /* keine Sitzung */
+      /* no session */
     }
     this.refresh();
   }
@@ -168,7 +168,7 @@ export class SipLink {
       try {
         s.sendDTMF(String(digit));
       } catch (e) {
-        /* nicht im Gespraech */
+        /* not in a call */
       }
     }
   }

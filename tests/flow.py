@@ -1,7 +1,7 @@
-"""Neuen Konfigurationsdialog und Kontakte-Befehle gegen die lokale Testinstanz pruefen.
+"""Check the new config flow and the contacts commands against the local test instance.
 
-Aufruf: .venv/bin/python tests/flow.py [--stream rtsp://...] [--keep]
-Loescht einen vorhandenen Intercom-Eintrag, laeuft den Dialog durch, prueft ha_intercom/info und den Optionsdialog mit Ordnerwechsel.
+Usage: .venv/bin/python tests/flow.py [--stream rtsp://...] [--keep]
+Deletes an existing intercom entry, runs through the flow, checks ha_intercom/info and the options flow with a base folder change.
 """
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ async def ws_calls(token: str, entry_id: str) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--stream", default=os.environ.get("INTERCOM_TEST_STREAM", "rtsp://127.0.0.1:8554/doorbell_hd"))
-    parser.add_argument("--keep", action="store_true", help="vorhandenen Eintrag behalten")
+    parser.add_argument("--keep", action="store_true", help="keep an existing entry")
     args = parser.parse_args()
 
     wait_ready()
@@ -69,14 +69,14 @@ def main() -> int:
     for e in entries or []:
         if e["domain"] in ("ha_intercom", "intercom") and not args.keep:
             status, res, _ = call("DELETE", f"/api/config/config_entries/entry/{e['entry_id']}")
-            print("alter Eintrag geloescht:", e["entry_id"], status)
+            print("old entry deleted:", e["entry_id"], status)
             time.sleep(2)
 
     entry_id = run_flow(args.stream, str(MEDIA_BASE), alarm="alarm_control_panel.test_alarm", verbose=True)
     time.sleep(3)
     status, entries, _ = call("GET", "/api/config/config_entries/entry")
     e = next(x for x in entries if x["domain"] == "ha_intercom")
-    print("Eintrag:", e["title"], e["state"])
+    print("entry:", e["title"], e["state"])
     assert e["state"] == "loaded", e
     rc = asyncio.run(ws_calls(smoke.TOKEN, entry_id))
     options_move(entry_id)
@@ -84,15 +84,13 @@ def main() -> int:
 
 
 def options_move(entry_id: str) -> None:
-    """Optionen: Basisordner wechseln, Umzugsschritt bestaetigen, Dateien im neuen Ordner pruefen, zurueckwechseln."""
-    from pathlib import Path
-
+    """Options: change the base folder, confirm the move step, check the files in the new folder, switch back."""
     old = MEDIA_BASE
     new = MEDIA_BASE.parent / "ha-intercom-test"
     (old / "mailbox").mkdir(parents=True, exist_ok=True)
-    probe = old / "mailbox" / "umzugstest.json"
+    probe = old / "mailbox" / "move_test.json"
     probe.write_text("{}")
-    vorher = sum(1 for p in (old / "mailbox").iterdir() if p.is_file())
+    before = sum(1 for p in (old / "mailbox").iterdir() if p.is_file())
 
     def opt(payload: dict | None = None):
         if payload is None:
@@ -108,16 +106,16 @@ def options_move(entry_id: str) -> None:
     assert flow["step_id"] == "init", flow
     flow = opt({"base_dir": str(new)})
     assert flow.get("step_id") == "move", flow
-    print("  Umzug:", json.dumps(flow.get("description_placeholders"), ensure_ascii=False))
+    print("  move:", json.dumps(flow.get("description_placeholders"), ensure_ascii=False))
     flow = opt({"move_files": True})
     assert flow.get("type") == "create_entry", flow
     time.sleep(4)
-    nachher = sum(1 for p in (new / "mailbox").iterdir() if p.is_file())
-    print(f"  Dateien mailbox: vorher {vorher} in {old.name}, nachher {nachher} in {new.name}")
-    assert nachher >= vorher and not probe.exists() and (new / "mailbox" / "umzugstest.json").exists()
-    (new / "mailbox" / "umzugstest.json").unlink()
+    after = sum(1 for p in (new / "mailbox").iterdir() if p.is_file())
+    print(f"  mailbox files: before {before} in {old.name}, after {after} in {new.name}")
+    assert after >= before and not probe.exists() and (new / "mailbox" / "move_test.json").exists()
+    (new / "mailbox" / "move_test.json").unlink()
 
-    # zurueck auf den alten Ordner, ebenfalls mit Umzug
+    # back to the old folder, again with a move
     flow = opt()
     fid[0] = flow["flow_id"]
     flow = opt({"base_dir": str(old)})
@@ -125,13 +123,13 @@ def options_move(entry_id: str) -> None:
     flow = opt({"move_files": True})
     assert flow.get("type") == "create_entry", flow
     time.sleep(4)
-    zurueck = sum(1 for p in (old / "mailbox").iterdir() if p.is_file())
-    print(f"  zurueck: {zurueck} Dateien in {old.name}")
-    assert zurueck == vorher - 1, (zurueck, vorher)
+    back = sum(1 for p in (old / "mailbox").iterdir() if p.is_file())
+    print(f"  back: {back} files in {old.name}")
+    assert back == before - 1, (back, before)
     _, entries, _ = call("GET", "/api/config/config_entries/entry")
     e = next(x for x in entries if x["domain"] == "ha_intercom")
     assert e["state"] == "loaded", e
-    print("Optionsdialog mit Umzug ok")
+    print("options flow with move ok")
 
 
 if __name__ == "__main__":

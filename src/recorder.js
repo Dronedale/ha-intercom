@@ -1,4 +1,4 @@
-/* Ansage mit dem Mikrofon des Geraets aufnehmen (MediaRecorder), mit Pegelanzeige. */
+/* Record an announcement with the device microphone (MediaRecorder), with a level meter. */
 
 const MIME_CANDIDATES = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus", "audio/ogg"];
 
@@ -106,7 +106,7 @@ export class AudioRecorder {
     try {
       if (this.recorder && this.recorder.state !== "inactive") this.recorder.stop();
     } catch (e) {
-      /* bereits beendet */
+      /* already stopped */
     }
     this._cleanup();
   }
@@ -120,7 +120,7 @@ export class AudioRecorder {
       try {
         this.ctx.close();
       } catch (e) {
-        /* egal */
+        /* ignore */
       }
     }
     this.ctx = null;

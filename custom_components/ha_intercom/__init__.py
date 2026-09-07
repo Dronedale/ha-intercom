@@ -1,4 +1,4 @@
-"""Intercom: Tuersprechanlage mit Mailbox, Ansagen und Freizeichen fuer Home Assistant."""
+"""Intercom: door intercom with mailbox, announcements and ringback tones for Home Assistant."""
 
 from __future__ import annotations
 
@@ -12,20 +12,20 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ATTR_KENNUNG,
+    ATTR_ID,
     ATTR_NAME,
-    ATTR_NEUER_NAME,
+    ATTR_NEW_NAME,
     DOMAIN,
-    SERVICE_ALLE_GESEHEN,
-    SERVICE_ANSAGE_AKTIVIEREN,
-    SERVICE_ANSAGE_LOESCHEN,
-    SERVICE_ANSAGE_UMBENENNEN,
+    SERVICE_MARK_ALL_SEEN,
+    SERVICE_ACTIVATE_ANNOUNCEMENT,
+    SERVICE_DELETE_ANNOUNCEMENT,
+    SERVICE_RENAME_ANNOUNCEMENT,
     SERVICE_ASTERISK_SYNC,
-    SERVICE_AUFNAHME_STARTEN,
-    SERVICE_AUFNAHME_STOPPEN,
-    SERVICE_INDEX_NEU,
-    SERVICE_NACHRICHT_GESEHEN,
-    SERVICE_NACHRICHT_LOESCHEN,
+    SERVICE_START_RECORDING,
+    SERVICE_STOP_RECORDING,
+    SERVICE_RESCAN,
+    SERVICE_MARK_MESSAGE_SEEN,
+    SERVICE_DELETE_MESSAGE,
 )
 from .http import IntercomMediaView, IntercomUploadView
 from .frontend import async_register_frontend, async_register_resource
@@ -49,14 +49,14 @@ type IntercomConfigEntry = ConfigEntry[IntercomManager]
 
 ATTR_ENTRY_ID = "entry_id"
 
-SCHEMA_KENNUNG = vol.Schema(
-    {vol.Required(ATTR_KENNUNG): cv.string, vol.Optional(ATTR_ENTRY_ID): cv.string}
+SCHEMA_ID = vol.Schema(
+    {vol.Required(ATTR_ID): cv.string, vol.Optional(ATTR_ENTRY_ID): cv.string}
 )
 SCHEMA_NAME = vol.Schema({vol.Required(ATTR_NAME): cv.string, vol.Optional(ATTR_ENTRY_ID): cv.string})
 SCHEMA_RENAME = vol.Schema(
     {
         vol.Required(ATTR_NAME): cv.string,
-        vol.Required(ATTR_NEUER_NAME): cv.string,
+        vol.Required(ATTR_NEW_NAME): cv.string,
         vol.Optional(ATTR_ENTRY_ID): cv.string,
     }
 )
@@ -64,7 +64,7 @@ SCHEMA_PLAIN = vol.Schema({vol.Optional(ATTR_ENTRY_ID): cv.string})
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Grundgeruest anlegen, Endpunkte und Dienste einmalig registrieren."""
+    """Create the scaffolding and register endpoints and services once."""
     hass.data.setdefault(DOMAIN, {})
     hass.http.register_view(IntercomMediaView(hass))
     hass.http.register_view(IntercomUploadView(hass))
@@ -75,7 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IntercomConfigEntry) -> bool:
-    """Einen Intercom-Eintrag starten."""
+    """Start an Intercom entry."""
     manager = IntercomManager(hass, entry)
     await manager.async_setup()
     entry.runtime_data = manager
@@ -84,14 +84,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntercomConfigEntry) -> 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     try:
         await async_register_resource(hass)
-    except Exception as err:  # noqa: BLE001 - die Karte darf den Eintrag nie blockieren
-        _LOGGER.warning("Dashboard-Ressource der Intercom-Karte konnte nicht eingetragen werden: %s", err)
+    except Exception as err:  # noqa: BLE001 - the card must never block the entry
+        _LOGGER.warning("Could not register the Intercom card as a dashboard resource: %s", err)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: IntercomConfigEntry) -> bool:
-    """Einen Intercom-Eintrag beenden."""
+    """Unload an Intercom entry."""
     ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if ok:
         manager: IntercomManager = entry.runtime_data
@@ -101,7 +101,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: IntercomConfigEntry) ->
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: IntercomConfigEntry) -> None:
-    """Optionen geaendert: Eintrag neu laden."""
+    """Options changed: reload the entry."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -115,42 +115,42 @@ def _pick_manager(hass: HomeAssistant, call: ServiceCall) -> IntercomManager | N
 
 @callback
 def _register_services(hass: HomeAssistant) -> None:
-    if hass.services.has_service(DOMAIN, SERVICE_INDEX_NEU):
+    if hass.services.has_service(DOMAIN, SERVICE_RESCAN):
         return
 
-    async def nachricht_loeschen(call: ServiceCall) -> None:
+    async def delete_message(call: ServiceCall) -> None:
         if m := _pick_manager(hass, call):
-            await m.async_nachricht_loeschen(call.data[ATTR_KENNUNG])
+            await m.async_delete_message(call.data[ATTR_ID])
 
-    async def nachricht_gesehen(call: ServiceCall) -> None:
+    async def mark_message_seen(call: ServiceCall) -> None:
         if m := _pick_manager(hass, call):
-            await m.async_nachricht_gesehen(call.data[ATTR_KENNUNG], True)
+            await m.async_mark_message_seen(call.data[ATTR_ID], True)
 
-    async def alle_gesehen(call: ServiceCall) -> None:
+    async def mark_all_seen(call: ServiceCall) -> None:
         if m := _pick_manager(hass, call):
-            await m.async_alle_gesehen()
+            await m.async_mark_all_seen()
 
-    async def ansage_aktivieren(call: ServiceCall) -> None:
+    async def activate_announcement(call: ServiceCall) -> None:
         if m := _pick_manager(hass, call):
-            await m.async_ansage_aktivieren(call.data[ATTR_NAME])
+            await m.async_activate_announcement(call.data[ATTR_NAME])
 
-    async def ansage_loeschen(call: ServiceCall) -> None:
+    async def delete_announcement(call: ServiceCall) -> None:
         if m := _pick_manager(hass, call):
-            await m.async_ansage_loeschen(call.data[ATTR_NAME])
+            await m.async_delete_announcement(call.data[ATTR_NAME])
 
-    async def ansage_umbenennen(call: ServiceCall) -> None:
+    async def rename_announcement(call: ServiceCall) -> None:
         if m := _pick_manager(hass, call):
-            await m.async_ansage_umbenennen(call.data[ATTR_NAME], call.data[ATTR_NEUER_NAME])
+            await m.async_rename_announcement(call.data[ATTR_NAME], call.data[ATTR_NEW_NAME])
 
-    async def aufnahme_starten(call: ServiceCall) -> None:
+    async def start_recording(call: ServiceCall) -> None:
         if m := _pick_manager(hass, call):
             await m.async_start_manual()
 
-    async def aufnahme_stoppen(call: ServiceCall) -> None:
+    async def stop_recording(call: ServiceCall) -> None:
         if m := _pick_manager(hass, call):
             await m.async_stop_manual()
 
-    async def index_neu(call: ServiceCall) -> None:
+    async def rescan(call: ServiceCall) -> None:
         if m := _pick_manager(hass, call):
             await m.async_scan_all(sync=True)
 
@@ -158,13 +158,13 @@ def _register_services(hass: HomeAssistant) -> None:
         if m := _pick_manager(hass, call):
             await m.async_sync_astdb()
 
-    hass.services.async_register(DOMAIN, SERVICE_NACHRICHT_LOESCHEN, nachricht_loeschen, schema=SCHEMA_KENNUNG)
-    hass.services.async_register(DOMAIN, SERVICE_NACHRICHT_GESEHEN, nachricht_gesehen, schema=SCHEMA_KENNUNG)
-    hass.services.async_register(DOMAIN, SERVICE_ALLE_GESEHEN, alle_gesehen, schema=SCHEMA_PLAIN)
-    hass.services.async_register(DOMAIN, SERVICE_ANSAGE_AKTIVIEREN, ansage_aktivieren, schema=SCHEMA_NAME)
-    hass.services.async_register(DOMAIN, SERVICE_ANSAGE_LOESCHEN, ansage_loeschen, schema=SCHEMA_NAME)
-    hass.services.async_register(DOMAIN, SERVICE_ANSAGE_UMBENENNEN, ansage_umbenennen, schema=SCHEMA_RENAME)
-    hass.services.async_register(DOMAIN, SERVICE_AUFNAHME_STARTEN, aufnahme_starten, schema=SCHEMA_PLAIN)
-    hass.services.async_register(DOMAIN, SERVICE_AUFNAHME_STOPPEN, aufnahme_stoppen, schema=SCHEMA_PLAIN)
-    hass.services.async_register(DOMAIN, SERVICE_INDEX_NEU, index_neu, schema=SCHEMA_PLAIN)
+    hass.services.async_register(DOMAIN, SERVICE_DELETE_MESSAGE, delete_message, schema=SCHEMA_ID)
+    hass.services.async_register(DOMAIN, SERVICE_MARK_MESSAGE_SEEN, mark_message_seen, schema=SCHEMA_ID)
+    hass.services.async_register(DOMAIN, SERVICE_MARK_ALL_SEEN, mark_all_seen, schema=SCHEMA_PLAIN)
+    hass.services.async_register(DOMAIN, SERVICE_ACTIVATE_ANNOUNCEMENT, activate_announcement, schema=SCHEMA_NAME)
+    hass.services.async_register(DOMAIN, SERVICE_DELETE_ANNOUNCEMENT, delete_announcement, schema=SCHEMA_NAME)
+    hass.services.async_register(DOMAIN, SERVICE_RENAME_ANNOUNCEMENT, rename_announcement, schema=SCHEMA_RENAME)
+    hass.services.async_register(DOMAIN, SERVICE_START_RECORDING, start_recording, schema=SCHEMA_PLAIN)
+    hass.services.async_register(DOMAIN, SERVICE_STOP_RECORDING, stop_recording, schema=SCHEMA_PLAIN)
+    hass.services.async_register(DOMAIN, SERVICE_RESCAN, rescan, schema=SCHEMA_PLAIN)
     hass.services.async_register(DOMAIN, SERVICE_ASTERISK_SYNC, asterisk_sync, schema=SCHEMA_PLAIN)

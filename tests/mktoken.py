@@ -1,4 +1,4 @@
-"""Anmelde-URL fuer die lokale Testinstanz erzeugen (Auth-Code ueber den Login-Flow, Browser tauscht ihn selbst ein)."""
+"""Create a login URL for the local test instance (auth code via the login flow, the browser exchanges it itself)."""
 
 from __future__ import annotations
 

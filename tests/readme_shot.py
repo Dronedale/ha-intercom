@@ -1,8 +1,8 @@
-"""Screenshot der Karte fuer die README aus der lokalen Testinstanz (englische Texte, Beispiel-Daten).
+"""Screenshot of the card for the README, taken from the local test instance (English texts, sample data).
 
-Voraussetzungen: laufende Testinstanz (.venv/bin/hass -c .test/config), `pip install playwright`,
-Google Chrome installiert (Playwright nutzt es ueber channel="chrome", kein Browser-Download).
-Ergebnis: assets/screenshot.png
+Prerequisites: a running test instance (.venv/bin/hass -c .test/config), `pip install playwright`,
+Google Chrome installed (Playwright uses it via channel="chrome", no browser download).
+Result: assets/screenshot.png
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ OUT = ROOT / "assets" / "screenshot.png"
 URL_PATH = "readme-shot"
 MAILBOX_DIR = ROOT / ".test" / "media" / "doorbell" / "mailbox"
 
-# Flache Illustration eines Hauseingangs als Platzhalter fuer das Livebild
+# Flat illustration of a house entrance as a placeholder for the live image
 DOOR_SVG = """<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>
 <defs>
  <linearGradient id='sky' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#3b4a5c'/><stop offset='1' stop-color='#1f2733'/></linearGradient>
@@ -105,14 +105,14 @@ def prepare() -> str:
         set_state(f"binary_sensor.{ext}_registered", "on")
         set_state(f"sensor.{ext}_state", "Not in use")
     set_state("binary_sensor.ami_connected", "on")
-    # Beispiel-Ansagen englisch benennen (nur Testdaten)
+    # Give the sample announcements English names (test data only)
     st, res, _ = call("GET", "/api/states/sensor.intercom_announcements")
     wanted = ["Vacation", "Delivery"]
     if st == 200:
         for entry, new in zip(res["attributes"].get("list", []), wanted):
             if entry["name"] != new:
                 call("POST", "/api/services/ha_intercom/rename_announcement", {"name": entry["name"], "new_name": new})
-    # Beispiel-Nachricht auf gestern 18:25 legen, damit die Karte "Yesterday" statt eines Datums zeigt
+    # Date the sample message to yesterday 18:25 so the card shows "Yesterday" instead of a date
     if MAILBOX_DIR.exists():
         from datetime import datetime, timedelta
 
@@ -139,13 +139,13 @@ def prepare() -> str:
     msgs.append({"type": "lovelace/config/save", "url_path": URL_PATH, "config": {"views": [view]}})
     for r in asyncio.run(ws_call(token, msgs)):
         assert r.get("success"), r
-    # Anmelde-URL (Auth-Code, der Browser tauscht ihn selbst ein)
+    # Login URL (auth code, the browser exchanges it itself)
     st, res, _ = call("POST", "/auth/login_flow", {"client_id": CLIENT_ID, "handler": ["homeassistant", None], "redirect_uri": CLIENT_ID})
     assert st == 200, res
     st, res, _ = call("POST", f"/auth/login_flow/{res['flow_id']}", {"username": "test", "password": "test1234", "client_id": CLIENT_ID})
     assert st == 200 and res.get("type") == "create_entry", res
     state = base64.b64encode(json.dumps({"hassUrl": BASE, "clientId": CLIENT_ID}).encode()).decode()
-    # Code direkt auf der Zielseite einloesen: ohne "angemeldet bleiben" haelt HA den Token nur im Speicher der Seite
+    # Redeem the code directly on the target page: without "stay logged in" HA keeps the token only in the page memory
     return f"{BASE}/{URL_PATH}/0?auth_callback=1&code={res['result']}&state={state}"
 
 
@@ -157,7 +157,7 @@ try { localStorage.setItem('selectedLanguage', JSON.stringify('en')); } catch (e
 
 
 def neutral_thumbnails(ctx) -> None:
-    """Vorschaubilder der Test-Nachrichten durch die Illustration ersetzen (Originale nach .test/mailbox-orig)."""
+    """Replace the thumbnails of the test messages with the illustration (originals moved to .test/mailbox-orig)."""
     jpgs = sorted(MAILBOX_DIR.glob("*.jpg")) if MAILBOX_DIR.exists() else []
     if not jpgs:
         return

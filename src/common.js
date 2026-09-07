@@ -1,4 +1,4 @@
-/* Gemeinsame Helfer: Texte, Symbole, Formatierung, signierte Medienpfade, Auskunft der Integration. */
+/* Shared helpers: strings, icons, formatting, signed media paths, integration info. */
 
 export const VERSION = __INTERCOM_VERSION__;
 
@@ -15,6 +15,16 @@ const STRINGS = {
     calling: "Ruft an",
     connecting: "Verbinde …",
     call_failed: "Anruf fehlgeschlagen: {e}",
+    err_media: "Mikrofon verweigert oder Seite nicht über https geöffnet",
+    err_webrtc: "WebRTC-Fehler, Mikrofon oder unsichere Verbindung (http)",
+    err_not_found: "Nebenstelle unbekannt",
+    err_connection: "keine Verbindung zu Asterisk",
+    err_timeout: "keine Antwort von Asterisk",
+    err_unavailable: "Gegenstelle nicht erreichbar",
+    err_busy: "besetzt",
+    err_rejected: "abgewiesen",
+    err_ended: "sofort beendet",
+    err_no_sipcore: "sip-core nicht verfügbar",
     ready: "Bereit",
     sip_missing: "Sprechanlage hier nicht verfügbar",
     sip_hint: "sip-core ist auf diesem Gerät nicht angemeldet",
@@ -140,22 +150,22 @@ const STRINGS = {
     g_ring: "Klingeln",
     g_answering: "Anrufbeantworter",
     g_status: "Status",
-    s_klingeldauer: "Klingeldauer",
-    s_klingeldauer_d: "So lange klingelt das Tablet, danach Besetztton oder Ansage",
-    s_freizeichen: "Freizeichen an der Tür",
-    s_freizeichen_d: "Standard oder eine Datei aus dem Freizeichen-Ordner",
-    s_klingelton: "Klingelton Innenstation",
-    s_klingelton_d: "Ton am Wandtablet beim Klingeln, Dateien im Ordner klingeltoene",
+    s_ring_duration: "Klingeldauer",
+    s_ring_duration_d: "So lange klingelt das Tablet, danach Besetztton oder Ansage",
+    s_ringback: "Freizeichen an der Tür",
+    s_ringback_d: "Standard oder eine Datei aus dem Freizeichen-Ordner",
+    s_ringtone: "Klingelton Innenstation",
+    s_ringtone_d: "Ton am Wandtablet beim Klingeln, Dateien im Ordner ringtones",
     s_mailbox: "Mailbox",
     s_mailbox_d: "Jedes Klingeln mit Clip und Vorschaubild speichern",
-    s_sprachansage: "Sprachansage",
-    s_sprachansage_d: "Nach der Klingeldauer Ansage, Piepton und Sprechzeit statt Besetztton",
-    s_ansage: "Aktive Ansage",
-    s_ansage_d: "Wird nach der Klingeldauer abgespielt",
-    s_sprechzeit: "Sprechzeit nach der Ansage",
-    s_sprechzeit_d: "Endet früher, wenn der Besucher schweigt",
-    s_aufbewahrung: "Aufbewahrung",
-    s_aufbewahrung_d: "Ältere Nachrichten werden nachts gelöscht",
+    s_voice_announcement: "Sprachansage",
+    s_voice_announcement_d: "Nach der Klingeldauer Ansage, Piepton und Sprechzeit statt Besetztton",
+    s_announcement: "Aktive Ansage",
+    s_announcement_d: "Wird nach der Klingeldauer abgespielt",
+    s_talk_time: "Sprechzeit nach der Ansage",
+    s_talk_time_d: "Endet früher, wenn der Besucher schweigt",
+    s_retention: "Aufbewahrung",
+    s_retention_d: "Ältere Nachrichten werden nachts gelöscht",
     st_door: "Türstation {ext}",
     st_tablet: "Wandtablet {ext}",
     st_registered: "Registriert",
@@ -182,6 +192,16 @@ const STRINGS = {
     calling: "Calling",
     connecting: "Connecting …",
     call_failed: "Call failed: {e}",
+    err_media: "Microphone denied or page not opened via https",
+    err_webrtc: "WebRTC error, microphone or insecure connection (http)",
+    err_not_found: "Extension unknown",
+    err_connection: "no connection to Asterisk",
+    err_timeout: "no answer from Asterisk",
+    err_unavailable: "Remote party unavailable",
+    err_busy: "busy",
+    err_rejected: "rejected",
+    err_ended: "ended immediately",
+    err_no_sipcore: "sip-core not available",
     ready: "Ready",
     sip_missing: "Intercom not available here",
     sip_hint: "sip-core is not registered on this device",
@@ -307,22 +327,22 @@ const STRINGS = {
     g_ring: "Ringing",
     g_answering: "Answering machine",
     g_status: "Status",
-    s_klingeldauer: "Ring time",
-    s_klingeldauer_d: "How long the tablet rings, then busy tone or announcement",
-    s_freizeichen: "Ringback tone at the door",
-    s_freizeichen_d: "Default or a file from the ringback folder",
-    s_klingelton: "Indoor ringtone",
-    s_klingelton_d: "Sound on the wall tablet when the bell rings, files in the klingeltoene folder",
+    s_ring_duration: "Ring time",
+    s_ring_duration_d: "How long the tablet rings, then busy tone or announcement",
+    s_ringback: "Ringback tone at the door",
+    s_ringback_d: "Default or a file from the ringback folder",
+    s_ringtone: "Indoor ringtone",
+    s_ringtone_d: "Sound on the wall tablet when the bell rings, files in the ringtones folder",
     s_mailbox: "Mailbox",
     s_mailbox_d: "Store every ring with clip and thumbnail",
-    s_sprachansage: "Voice announcement",
-    s_sprachansage_d: "After the ring time play the announcement, beep and speaking time instead of busy tone",
-    s_ansage: "Active announcement",
-    s_ansage_d: "Played after the ring time",
-    s_sprechzeit: "Speaking time after the announcement",
-    s_sprechzeit_d: "Ends earlier when the visitor stays silent",
-    s_aufbewahrung: "Retention",
-    s_aufbewahrung_d: "Older messages are deleted at night",
+    s_voice_announcement: "Voice announcement",
+    s_voice_announcement_d: "After the ring time play the announcement, beep and speaking time instead of busy tone",
+    s_announcement: "Active announcement",
+    s_announcement_d: "Played after the ring time",
+    s_talk_time: "Speaking time after the announcement",
+    s_talk_time_d: "Ends earlier when the visitor stays silent",
+    s_retention: "Retention",
+    s_retention_d: "Older messages are deleted at night",
     st_door: "Door station {ext}",
     st_tablet: "Wall tablet {ext}",
     st_registered: "Registered",
@@ -355,7 +375,7 @@ export function makeT(lang) {
   };
 }
 
-/* Material-Design-Symbole (mdi), als Pfade */
+/* Material Design icons (mdi) as SVG paths */
 export const ICONS = {
   phone: "M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z",
   hangup: "M12,9C10.4,9 8.85,9.25 7.4,9.72V12.82C7.4,13.22 7.17,13.56 6.84,13.72C5.86,14.21 4.97,14.84 4.17,15.57C4,15.75 3.75,15.86 3.5,15.86C3.2,15.86 2.95,15.74 2.77,15.56L0.29,13.08C0.11,12.9 0,12.65 0,12.38C0,12.1 0.11,11.85 0.29,11.67C3.34,8.77 7.46,7 12,7C16.54,7 20.66,8.77 23.71,11.67C23.89,11.85 24,12.1 24,12.38C24,12.65 23.89,12.9 23.71,13.08L21.23,15.56C21.05,15.74 20.8,15.86 20.5,15.86C20.25,15.86 20,15.75 19.82,15.57C19.03,14.84 18.14,14.21 17.16,13.72C16.83,13.56 16.6,13.22 16.6,12.82V9.72C15.15,9.25 13.6,9 12,9Z",
@@ -407,7 +427,7 @@ function sameDay(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-/* "Heute 14:32", "Gestern 18:05", sonst "Do., 04.09. 09:41" */
+/* "Today 14:32", "Yesterday 18:05", otherwise "Thu, 04.09. 09:41" */
 export function fmtWhen(iso, lang, t) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -437,7 +457,7 @@ export function fmtClock(iso, lang) {
   return d.toLocaleTimeString(lang === "de" ? "de-DE" : "en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
-/* Signierte Pfade fuer Bilder, Clips und Ansagen; Browser-Elemente koennen keinen Bearer-Token senden. */
+/* Signed paths for images, clips and announcements; browser elements cannot send a bearer token. */
 const signed = new Map();
 
 export async function signPath(hass, path, expires = 3600) {
@@ -455,7 +475,7 @@ export function signedCached(path) {
   return hit && hit.exp > Date.now() + 30000 ? hit.url : null;
 }
 
-/* Auskunft der Integration: Nebenstellen, Kamera, Entitaeten je Schluessel. */
+/* Integration info: extensions, camera, entities by key. */
 const infoCache = new Map();
 
 export async function fetchInfo(hass, entryId, force = false) {
@@ -506,7 +526,7 @@ export async function loadHelpers() {
   return null;
 }
 
-/* Eine Dashboard-Karte aus einer Konfiguration erzeugen (z. B. die Kamerakarte). */
+/* Create a dashboard card from a configuration (e.g. the camera card). */
 export async function createCard(config) {
   const helpers = await loadHelpers();
   if (helpers && helpers.createCardElement) return helpers.createCardElement(config);
