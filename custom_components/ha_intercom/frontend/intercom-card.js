@@ -699,7 +699,7 @@ var ye=Object.defineProperty;var $e=(r,t,e)=>t in r?ye(r,t,{enumerable:!0,config
         <div class=${o}>${v("phone")}</div>
         <div><div class="big">${e.title}</div><div class="meta">${e.meta||""}</div></div>
       </div>`}else i.available||(c=l`<div class="statusline"><span class="dot off"></span>${t("sip_missing")} · ${t("sip_hint")}</div>`);return l`<div class="pane single">
-      <div class="call">
+      <div class="callpane">
         <div class="callzone">${c}${a}</div>
         ${this._renderActs(t)}
       </div>
@@ -1322,7 +1322,7 @@ var ye=Object.defineProperty;var $e=(r,t,e)=>t in r?ye(r,t,{enumerable:!0,config
         grid-template-rows: minmax(0, 1fr);
         overflow: hidden;
       }
-      .call {
+      .callpane {
         align-self: start;
         display: grid;
         grid-template-rows: auto auto;

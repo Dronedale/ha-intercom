@@ -546,7 +546,7 @@ export class IntercomCard extends LitElement {
         grid-template-rows: minmax(0, 1fr);
         overflow: hidden;
       }
-      .call {
+      .callpane {
         align-self: start;
         display: grid;
         grid-template-rows: auto auto;
@@ -2447,7 +2447,7 @@ export class IntercomCard extends LitElement {
       top = html`<div class="statusline"><span class="dot off"></span>${t("sip_missing")} · ${t("sip_hint")}</div>`;
     }
     return html`<div class="pane single">
-      <div class="call">
+      <div class="callpane">
         <div class="callzone">${top}${actions}</div>
         ${this._renderActs(t)}
       </div>
