@@ -1,6 +1,10 @@
 {
   "domain": "ha_intercom",
   "name": "Intercom",
+  "after_dependencies": [
+    "hassio",
+    "lovelace"
+  ],
   "codeowners": [
     "@Dronedale"
   ],
@@ -9,12 +13,6 @@
     "http",
     "camera",
     "websocket_api"
-  ],
-  "after_dependencies": [
-    "asterisk",
-    "hassio",
-    "dahua_vto",
-    "lovelace"
   ],
   "documentation": "https://github.com/Dronedale/ha-intercom",
   "integration_type": "hub",
