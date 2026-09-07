@@ -1,6 +1,7 @@
 # Intercom for Home Assistant
 
 [![Validate](https://github.com/Dronedale/ha-intercom/actions/workflows/validate.yml/badge.svg)](https://github.com/Dronedale/ha-intercom/actions/workflows/validate.yml)
+[![Open your Home Assistant instance and add this repository to HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Dronedale&repository=ha-intercom&category=integration)
 
 A door intercom with video mailbox, voice announcements, ringback tones and ring duration, delivered as one
 integration plus a full-screen card. Built for a Dahua VTO on the Asterisk add-on (TECH7Fox) with sip-core in the
@@ -26,9 +27,9 @@ possible, everything else works.
 
 ## Setup
 
-1. Copy the folder `custom_components/ha_intercom` to `/config/custom_components/`, or add
-   `https://github.com/Dronedale/ha-intercom` in HACS as a custom repository of type "Integration" and install it.
-   Restart Home Assistant afterwards.
+1. Install through HACS: click the HACS button above, or add `https://github.com/Dronedale/ha-intercom` in HACS as a
+   custom repository of type "Integration". Alternatively copy the folder `custom_components/ha_intercom` to
+   `/config/custom_components/`. Restart Home Assistant afterwards.
 2. Settings → Integrations → add "Intercom". The dialog walks through:
    - **Prerequisites**: shows what was found (add-on, integration, sip-core with extensions). If the add-on or the
      integration is missing, the dialog aborts.
@@ -358,6 +359,13 @@ The card bundle ships two libraries: [Lit](https://lit.dev) (BSD 3-Clause Licens
 license texts are in [`custom_components/ha_intercom/frontend/LICENSES.md`](custom_components/ha_intercom/frontend/LICENSES.md).
 Everything else this integration talks to (Asterisk, the TECH7Fox add-on and integrations, sip-core, go2rtc, camera
 cards) is installed separately, is only used through its public interfaces and stays under its own license.
+
+## Disclaimer
+
+This is a private project, provided as is and without any warranty, as stated in the MIT License. It writes to the
+Asterisk database, moves files in the media folder you configure and requires changes to your Asterisk dialplan.
+Test it on a non-critical setup first, keep backups of your Home Assistant and Asterisk configuration, and use it at
+your own risk. The author is not liable for any damage to your installation.
 
 ## License
 
