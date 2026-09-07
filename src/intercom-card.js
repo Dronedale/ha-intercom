@@ -2445,6 +2445,14 @@ export class IntercomCard extends LitElement {
       </div>`;
     } else if (!s.available) {
       top = html`<div class="statusline"><span class="dot off"></span>${t("sip_missing")} · ${t("sip_hint")}</div>`;
+    } else {
+      /* Ruhezustand: gleicher Block wie im Gespraech, Telefon-Symbol neutral */
+      const reg = info.ext_door ? stateOf(this.hass, `binary_sensor.${info.ext_door}_registered`) : null;
+      const meta = [reg ? (reg.state === "on" ? t("door_ready") : t("door_not_ready")) : "", this._lastRingText(t)].filter(Boolean).join(" · ");
+      top = html`<div class="callstate">
+        <div class="ring">${icon("phone")}</div>
+        <div><div class="big">${t("ready")}</div><div class="meta">${meta}</div></div>
+      </div>`;
     }
     return html`<div class="pane single">
       <div class="callpane">
